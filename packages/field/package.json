@@ -1,0 +1,8 @@
+{
+  "name": "@bfr-ui/field",
+  "version": "0.0.0",
+  "license": "MIT",
+  "peerDependencies": {
+    "vue": "^3.0.4"
+  }
+}
