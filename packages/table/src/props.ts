@@ -8,9 +8,9 @@ import type {
   TableCustomRecord,
   TableRowSelection,
 } from './types/table';
-import type { FormProps } from '/@/components/Form';
+// import type { FormProps } from '/@/components/Form';
 import { DEFAULT_SORT_FN, FETCH_SETTING } from './const';
-import { propTypes } from '/@/utils/propTypes';
+import { propTypes } from '@bfr-ui/utils/propTypes';
 
 // 注释看 types/table
 export const basicProps = {
@@ -68,11 +68,11 @@ export const basicProps = {
   },
   // 使用搜索表单
   useSearchForm: propTypes.bool,
-  // 表单配置
-  formConfig: {
-    type: Object as PropType<Partial<FormProps>>,
-    default: null,
-  },
+  // // 表单配置
+  // formConfig: {
+  //   type: Object as PropType<Partial<FormProps>>,
+  //   default: null,
+  // },
   columns: {
     type: [Array] as PropType<BasicColumn[]>,
     default: () => [],

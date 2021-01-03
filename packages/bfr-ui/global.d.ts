@@ -13,4 +13,10 @@ declare type Recordable<T extends any = any> = Record<string, T>;
 
 declare type Hash<T> = Recordable<T>
 
-declare type ComponentElement<T extends HTMLElement = HTMLDivElement> = CustomizedHTMLElement<T> | null;
+
+declare type EmitType = (event: string, ...args: any[]) => void;
+declare interface ComponentElRef<T extends HTMLElement = HTMLDivElement> {
+  $el: T;
+}
+declare type ComponentRef<T extends HTMLElement = HTMLDivElement> = ComponentElRef<T> | null;
+declare type ElRef<T extends HTMLElement = HTMLDivElement> = Nullable<T>;

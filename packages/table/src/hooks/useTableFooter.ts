@@ -2,7 +2,7 @@ import type { ComputedRef, Ref } from 'vue';
 import type { BasicTableProps } from '../types/table';
 import { unref, computed, h, nextTick, watchEffect } from 'vue';
 import TableFooter from '../components/TableFooter.vue';
-import { useEventListener } from '/@/hooks/event/useEventListener';
+import { useEventListener } from '@bfr-ui/hooks/event/useEventListener';
 
 export function useTableFooter(
   propsRef: ComputedRef<BasicTableProps>,
@@ -12,7 +12,7 @@ export function useTableFooter(
     scrollToFirstRowOnChange: boolean;
   }>,
   tableElRef: Ref<ComponentRef>,
-  getDataSourceRef: ComputedRef<Recordable>
+  getDataSourceRef: ComputedRef<Recordable>,
 ) {
   const getIsEmptyData = computed(() => {
     return (unref(getDataSourceRef) || []).length === 0;
@@ -43,7 +43,7 @@ export function useTableFooter(
         name: 'scroll',
         listener: () => {
           const footerBodyDom = tableEl.$el.querySelector(
-            '.ant-table-footer .ant-table-body'
+            '.ant-table-footer .ant-table-body',
           ) as HTMLDivElement;
           if (!footerBodyDom || !bodyDom) return;
           footerBodyDom.scrollLeft = bodyDom.scrollLeft;

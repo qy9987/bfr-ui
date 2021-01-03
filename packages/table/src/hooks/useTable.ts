@@ -2,11 +2,12 @@ import type { BasicTableProps, TableActionType, FetchParams, BasicColumn } from 
 import type { PaginationProps } from '../types/pagination';
 
 import { ref, onUnmounted, unref } from 'vue';
-import { isProdMode } from '/@/utils/env';
-import { isInSetup } from '/@/utils/helper/vueHelper';
+import { isInSetup } from '@bfr-ui/utils/vue';
+
+const isProdMode = () => process.env.NODE_ENV==='production';
 
 export function useTable(
-  tableProps?: Partial<BasicTableProps>
+  tableProps?: Partial<BasicTableProps>,
 ): [(instance: TableActionType) => void, TableActionType] {
   isInSetup();
 
@@ -42,9 +43,6 @@ export function useTable(
     },
     setProps: (props: Partial<BasicTableProps>) => {
       getTableInstance().setProps(props);
-    },
-    redoHeight: () => {
-      getTableInstance().redoHeight();
     },
     setLoading: (loading: boolean) => {
       getTableInstance().setLoading(loading);

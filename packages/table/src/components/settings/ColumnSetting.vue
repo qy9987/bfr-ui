@@ -1,54 +1,54 @@
 <template>
   <Tooltip placement="top">
     <template #title>
-      <span>{{ t('component.table.settingColumn') }}</span>
+      <span>列设置</span>
     </template>
     <Popover
-      :getPopupContainer="getPopupContainer"
+      :get-popup-container="getPopupContainer"
       placement="bottomLeft"
       trigger="click"
+      :overlay-class-name="`${prefixCls}__cloumn-list`"
       @visibleChange="handleVisibleChange"
-      :overlayClassName="`${prefixCls}__cloumn-list`"
     >
       <template #title>
         <div :class="`${prefixCls}__popover-title`">
           <Checkbox
-            :indeterminate="indeterminate"
             v-model:checked="checkAll"
+            :indeterminate="indeterminate"
             @change="onCheckAllChange"
           >
-            {{ t('component.table.settingColumnShow') }}
+            列展示
           </Checkbox>
 
           <Checkbox v-model:checked="checkIndex" @change="handleIndexCheckChange">
-            {{ t('component.table.settingIndexColumnShow') }}
+            序号列
           </Checkbox>
 
           <Checkbox
             v-model:checked="checkSelect"
-            @change="handleSelectCheckChange"
             :disabled="!defaultRowSelection"
+            @change="handleSelectCheckChange"
           >
-            {{ t('component.table.settingSelectColumnShow') }}
+            勾选列
           </Checkbox>
 
           <a-button size="small" type="link" @click="reset">
-            {{ t('component.table.settingReset') }}
+            重置
           </a-button>
         </div>
       </template>
 
       <template #content>
         <ScrollContainer>
-          <CheckboxGroup v-model:value="checkedList" @change="onChange" ref="columnListRef">
+          <CheckboxGroup ref="columnListRef" v-model:value="checkedList" @change="onChange">
             <template v-for="item in plainOptions" :key="item.value">
               <div :class="`${prefixCls}__check-item`">
                 <DragOutlined class="table-coulmn-drag-icon" />
                 <Checkbox :value="item.value"> {{ item.label }} </Checkbox>
 
-                <Tooltip placement="bottomLeft" :mouseLeaveDelay="0.4">
-                  <template #title> {{ t('component.table.settingFixedLeft') }}</template>
-                  <Icon
+                <Tooltip placement="bottomLeft" :mouse-leave-delay="0.4">
+                  <template #title> 固定到左侧</template>
+                  <i
                     icon="line-md:arrow-align-left"
                     :class="[
                       `${prefixCls}__fixed-left`,
@@ -61,9 +61,9 @@
                   />
                 </Tooltip>
                 <Divider type="vertical" />
-                <Tooltip placement="bottomLeft" :mouseLeaveDelay="0.4">
-                  <template #title> {{ t('component.table.settingFixedRight') }}</template>
-                  <Icon
+                <Tooltip placement="bottomLeft" :mouse-leave-delay="0.4">
+                  <template #title>固定到右侧</template>
+                  <i
                     icon="line-md:arrow-align-left"
                     :class="[
                       `${prefixCls}__fixed-right`,
@@ -85,30 +85,27 @@
   </Tooltip>
 </template>
 <script lang="ts">
-  import {
-    defineComponent,
-    ref,
-    reactive,
-    toRefs,
-    watchEffect,
-    nextTick,
-    unref,
-    computed,
-  } from 'vue';
-  import { Tooltip, Popover, Checkbox, Divider } from 'ant-design-vue';
-  import { SettingOutlined, DragOutlined } from '@ant-design/icons-vue';
-  import { Icon } from '/@/components/Icon';
-  import { ScrollContainer } from '/@/components/Container';
+import {
+  defineComponent,
+  ref,
+  reactive,
+  toRefs,
+  watchEffect,
+  nextTick,
+  unref,
+  computed,
+} from 'vue';
+import { Tooltip, Popover, Checkbox, Divider } from 'ant-design-vue';
+import { SettingOutlined, DragOutlined } from '@ant-design/icons-vue';
+import { ScrollContainer } from '@bfr-ui/container';
 
-  import { useI18n } from '/@/hooks/web/useI18n';
-  import { useTableContext } from '../../hooks/useTableContext';
-  import { useDesign } from '/@/hooks/web/useDesign';
-  import { useSortable } from '/@/hooks/web/useSortable';
+import { useTableContext } from '../../hooks/useTableContext';
+import { useSortable } from '@bfr-ui/hooks/web/useSortable';
 
-  import { isNullAndUnDef } from '/@/utils/is';
-  import { getPopupContainer } from '/@/utils';
+import { isNullAndUnDef } from '@bfr-ui/utils/is';
+import { getPopupContainer } from '@bfr-ui/utils';
 
-  import type { BasicColumn } from '../../types/table';
+import type { BasicColumn, BasicTableProps } from '../../types/table';
 
   interface State {
     indeterminate: boolean;
@@ -122,238 +119,237 @@
     value: string;
     fixed?: boolean | 'left' | 'right';
   }
+interface ChangeEvent extends Event {
+  target: HTMLInputElement;
+}
+export default defineComponent({
+  name: 'ColumnSetting',
+  components: {
+    SettingOutlined,
+    Popover,
+    Tooltip,
+    Checkbox,
+    CheckboxGroup: Checkbox.Group,
+    DragOutlined,
+    ScrollContainer,
+    Divider,
+  },
 
-  export default defineComponent({
-    name: 'ColumnSetting',
-    components: {
-      SettingOutlined,
-      Popover,
-      Tooltip,
-      Checkbox,
-      CheckboxGroup: Checkbox.Group,
-      DragOutlined,
-      ScrollContainer,
-      Divider,
-      Icon,
-    },
+  setup() {
+    const table = useTableContext();
 
-    setup() {
-      const { t } = useI18n();
-      const table = useTableContext();
+    const defaultRowSelection = table.getRowSelection();
+    let inited = false;
 
-      const defaultRowSelection = table.getRowSelection();
-      let inited = false;
+    const cachePlainOptions = ref<Options[]>([]);
+    const plainOptions = ref<Options[]>([]);
 
-      const cachePlainOptions = ref<Options[]>([]);
-      const plainOptions = ref<Options[]>([]);
+    const plainSortOptions = ref<Options[]>([]);
 
-      const plainSortOptions = ref<Options[]>([]);
+    const columnListRef = ref<ComponentRef>(null);
 
-      const columnListRef = ref<ComponentRef>(null);
+    const state = reactive<State>({
+      indeterminate: false,
+      checkAll: true,
+      checkedList: [],
+      defaultCheckList: [],
+    });
 
-      const state = reactive<State>({
-        indeterminate: false,
-        checkAll: true,
-        checkedList: [],
-        defaultCheckList: [],
-      });
+    const checkIndex = ref(false);
+    const checkSelect = ref(false);
 
-      const checkIndex = ref(false);
-      const checkSelect = ref(false);
+    const prefixCls = 'bfr-column-setting';
 
-      const { prefixCls } = useDesign('basic-column-setting');
+    const getValues = computed(() => {
+      return unref(table?.getBindValues) || {};
+    });
 
-      const getValues = computed(() => {
-        return unref(table?.getBindValues) || {};
-      });
+    watchEffect(() => {
+      const columns = table.getColumns();
+      if (columns.length) {
+        init();
+      }
+    });
 
-      watchEffect(() => {
-        const columns = table.getColumns();
-        if (columns.length) {
-          init();
-        }
-      });
+    watchEffect(() => {
+      const values = unref(getValues) as BasicTableProps<any>;
+      checkIndex.value = !!values.showIndexColumn;
+      checkSelect.value = !!values.rowSelection;
+    });
 
-      watchEffect(() => {
-        const values = unref(getValues);
-        checkIndex.value = !!values.showIndexColumn;
-        checkSelect.value = !!values.rowSelection;
-      });
-
-      function getColumns() {
-        const ret: Options[] = [];
-        table.getColumns({ ignoreIndex: true, ignoreAction: true }).forEach((item) => {
-          ret.push({
-            label: item.title as string,
-            value: (item.dataIndex || item.title) as string,
-            ...item,
-          });
+    function getColumns() {
+      const ret: Options[] = [];
+      table.getColumns({ ignoreIndex: true, ignoreAction: true }).forEach(item => {
+        ret.push({
+          label: item.title as string,
+          value: (item.dataIndex || item.title) as string,
+          ...item,
         });
-        return ret;
+      });
+      return ret;
+    }
+
+    function init() {
+      const columns = getColumns();
+
+      const checkList = table
+        .getColumns()
+        .map(item => {
+          if (item.defaultHidden) {
+            return '';
+          }
+          return item.dataIndex || item.title;
+        })
+        .filter(Boolean) as string[];
+
+      if (!plainOptions.value.length) {
+        plainOptions.value = columns;
+        plainSortOptions.value = columns;
+        cachePlainOptions.value = columns;
+        state.defaultCheckList = checkList;
+      } else {
+        const fixedColumns = columns.filter(item =>
+          Reflect.has(item, 'fixed'),
+        ) as BasicColumn[];
+
+        unref(plainOptions).forEach((item: BasicColumn) => {
+          const findItem = fixedColumns.find(fCol => fCol.dataIndex === item.dataIndex);
+          if (findItem) {
+            item.fixed = findItem.fixed;
+          }
+        });
       }
 
-      function init() {
-        const columns = getColumns();
+      state.checkedList = checkList;
+    }
 
-        const checkList = table
-          .getColumns()
-          .map((item) => {
-            if (item.defaultHidden) {
-              return '';
-            }
-            return item.dataIndex || item.title;
-          })
-          .filter(Boolean) as string[];
-
-        if (!plainOptions.value.length) {
-          plainOptions.value = columns;
-          plainSortOptions.value = columns;
-          cachePlainOptions.value = columns;
-          state.defaultCheckList = checkList;
-        } else {
-          const fixedColumns = columns.filter((item) =>
-            Reflect.has(item, 'fixed')
-          ) as BasicColumn[];
-
-          unref(plainOptions).forEach((item: BasicColumn) => {
-            const findItem = fixedColumns.find((fCol) => fCol.dataIndex === item.dataIndex);
-            if (findItem) {
-              item.fixed = findItem.fixed;
-            }
-          });
-        }
-
+    // checkAll change
+    function onCheckAllChange(e: ChangeEvent) {
+      state.indeterminate = false;
+      const checkList = plainOptions.value.map(item => item.value);
+      if (e.target.checked) {
         state.checkedList = checkList;
+        table.setColumns(checkList);
+      } else {
+        state.checkedList = [];
+        table.setColumns([]);
       }
+    }
 
-      // checkAll change
-      function onCheckAllChange(e: ChangeEvent) {
-        state.indeterminate = false;
-        const checkList = plainOptions.value.map((item) => item.value);
-        if (e.target.checked) {
-          state.checkedList = checkList;
-          table.setColumns(checkList);
-        } else {
-          state.checkedList = [];
-          table.setColumns([]);
-        }
-      }
+    // Trigger when check/uncheck a column
+    function onChange(checkedList: string[]) {
+      const len = plainOptions.value.length;
+      state.indeterminate = !!checkedList.length && checkedList.length < len;
+      state.checkAll = checkedList.length === len;
 
-      // Trigger when check/uncheck a column
-      function onChange(checkedList: string[]) {
-        const len = plainOptions.value.length;
-        state.indeterminate = !!checkedList.length && checkedList.length < len;
-        state.checkAll = checkedList.length === len;
+      const sortList = unref(plainSortOptions).map(item => item.value);
+      checkedList.sort((prev, next) => {
+        return sortList.indexOf(prev) - sortList.indexOf(next);
+      });
+      table.setColumns(checkedList);
+    }
 
-        const sortList = unref(plainSortOptions).map((item) => item.value);
-        checkedList.sort((prev, next) => {
-          return sortList.indexOf(prev) - sortList.indexOf(next);
+    // reset columns
+    function reset() {
+      state.checkedList = [...state.defaultCheckList];
+      state.checkAll = true;
+      state.indeterminate = false;
+      plainOptions.value = unref(cachePlainOptions);
+      plainSortOptions.value = unref(cachePlainOptions);
+      table.setColumns(table.getCacheColumns());
+    }
+
+    // Open the pop-up window for drag and drop initialization
+    function handleVisibleChange() {
+      if (inited) return;
+      nextTick(() => {
+        const columnListEl = unref(columnListRef);
+        if (!columnListEl) return;
+        const el = columnListEl.$el;
+        if (!el) return;
+        // Drag and drop sort
+        const { initSortable } = useSortable(el, {
+          handle: '.table-coulmn-drag-icon ',
+          onEnd: evt => {
+            const { oldIndex, newIndex } = evt;
+            if (isNullAndUnDef(oldIndex) || isNullAndUnDef(newIndex) || oldIndex === newIndex) {
+              return;
+            }
+            // Sort column
+            const columns = getColumns();
+
+            if (oldIndex > newIndex) {
+              columns.splice(newIndex, 0, columns[oldIndex]);
+              columns.splice(oldIndex + 1, 1);
+            } else {
+              columns.splice(newIndex + 1, 0, columns[oldIndex]);
+              columns.splice(oldIndex, 1);
+            }
+
+            plainSortOptions.value = columns;
+            plainOptions.value = columns;
+            table.setColumns(columns);
+          },
         });
-        table.setColumns(checkedList);
+        initSortable();
+        inited = true;
+      });
+    }
+
+    // Control whether the serial number column is displayed
+    function handleIndexCheckChange(e: ChangeEvent) {
+      table.setProps({
+        showIndexColumn: e.target.checked,
+      });
+    }
+
+    // Control whether the check box is displayed
+    function handleSelectCheckChange(e: ChangeEvent) {
+      table.setProps({
+        rowSelection: e.target.checked ? defaultRowSelection : undefined,
+      });
+    }
+
+    function handleColumnFixed(item: BasicColumn, fixed?: 'left' | 'right') {
+      if (!state.checkedList.includes(item.dataIndex as string)) return;
+
+      const columns = getColumns() as BasicColumn[];
+      const isFixed = item.fixed === fixed ? false : fixed;
+      const index = columns.findIndex(col => col.dataIndex === item.dataIndex);
+      if (index !== -1) {
+        columns[index].fixed = isFixed;
+      }
+      item.fixed = isFixed;
+
+      if (isFixed && !item.width) {
+        item.width = 100;
       }
 
-      // reset columns
-      function reset() {
-        state.checkedList = [...state.defaultCheckList];
-        state.checkAll = true;
-        state.indeterminate = false;
-        plainOptions.value = unref(cachePlainOptions);
-        plainSortOptions.value = unref(cachePlainOptions);
-        table.setColumns(table.getCacheColumns());
-      }
+      table.setColumns(columns);
+    }
 
-      // Open the pop-up window for drag and drop initialization
-      function handleVisibleChange() {
-        if (inited) return;
-        nextTick(() => {
-          const columnListEl = unref(columnListRef);
-          if (!columnListEl) return;
-          const el = columnListEl.$el;
-          if (!el) return;
-          // Drag and drop sort
-          const { initSortable } = useSortable(el, {
-            handle: '.table-coulmn-drag-icon ',
-            onEnd: (evt) => {
-              const { oldIndex, newIndex } = evt;
-              if (isNullAndUnDef(oldIndex) || isNullAndUnDef(newIndex) || oldIndex === newIndex) {
-                return;
-              }
-              // Sort column
-              const columns = getColumns();
-
-              if (oldIndex > newIndex) {
-                columns.splice(newIndex, 0, columns[oldIndex]);
-                columns.splice(oldIndex + 1, 1);
-              } else {
-                columns.splice(newIndex + 1, 0, columns[oldIndex]);
-                columns.splice(oldIndex, 1);
-              }
-
-              plainSortOptions.value = columns;
-              plainOptions.value = columns;
-              table.setColumns(columns);
-            },
-          });
-          initSortable();
-          inited = true;
-        });
-      }
-
-      // Control whether the serial number column is displayed
-      function handleIndexCheckChange(e: ChangeEvent) {
-        table.setProps({
-          showIndexColumn: e.target.checked,
-        });
-      }
-
-      // Control whether the check box is displayed
-      function handleSelectCheckChange(e: ChangeEvent) {
-        table.setProps({
-          rowSelection: e.target.checked ? defaultRowSelection : undefined,
-        });
-      }
-
-      function handleColumnFixed(item: BasicColumn, fixed?: 'left' | 'right') {
-        if (!state.checkedList.includes(item.dataIndex as string)) return;
-
-        const columns = getColumns() as BasicColumn[];
-        const isFixed = item.fixed === fixed ? false : fixed;
-        const index = columns.findIndex((col) => col.dataIndex === item.dataIndex);
-        if (index !== -1) {
-          columns[index].fixed = isFixed;
-        }
-        item.fixed = isFixed;
-
-        if (isFixed && !item.width) {
-          item.width = 100;
-        }
-
-        table.setColumns(columns);
-      }
-
-      return {
-        t,
-        ...toRefs(state),
-        onCheckAllChange,
-        onChange,
-        plainOptions,
-        reset,
-        prefixCls,
-        columnListRef,
-        handleVisibleChange,
-        checkIndex,
-        checkSelect,
-        handleIndexCheckChange,
-        handleSelectCheckChange,
-        defaultRowSelection,
-        handleColumnFixed,
-        getPopupContainer,
-      };
-    },
-  });
+    return {
+      ...toRefs(state),
+      onCheckAllChange,
+      onChange,
+      plainOptions,
+      reset,
+      prefixCls,
+      columnListRef,
+      handleVisibleChange,
+      checkIndex,
+      checkSelect,
+      handleIndexCheckChange,
+      handleSelectCheckChange,
+      defaultRowSelection,
+      handleColumnFixed,
+      getPopupContainer,
+    };
+  },
+});
 </script>
 <style lang="less">
-  @prefix-cls: ~'@{namespace}-basic-column-setting';
+  @prefix-cls: ~'bfr-basic-column-setting';
 
   .table-coulmn-drag-icon {
     margin: 0 5px;

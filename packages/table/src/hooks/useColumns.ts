@@ -1,12 +1,9 @@
 import { BasicColumn, BasicTableProps, GetColumnsParams } from '../types/table';
 import { PaginationProps } from '../types/pagination';
 import { unref, ComputedRef, Ref, computed, watchEffect, ref, toRaw } from 'vue';
-import { isBoolean, isArray, isString } from '/@/utils/is';
+import { isBoolean, isArray, isString } from '@bfr-ui/utils/is';
 import { DEFAULT_ALIGN, PAGE_SIZE, INDEX_COLUMN_FLAG, ACTION_COLUMN_FLAG } from '../const';
-import { useI18n } from '/@/hooks/web/useI18n';
 import { isEqual, cloneDeep } from 'lodash-es';
-
-const { t } = useI18n();
 
 function handleItem(item: BasicColumn, ellipsis: boolean) {
   const { key, dataIndex, children } = item;
@@ -64,7 +61,7 @@ function handleIndexColumn(
   columns.unshift({
     flag: INDEX_COLUMN_FLAG,
     width: 50,
-    title: t('component.table.index'),
+    title: '序号',
     align: 'center',
     customRender: ({ index }) => {
       const getPagination = unref(getPaginationRef);

@@ -1,37 +1,34 @@
 <template>
   <Tooltip placement="top">
     <template #title>
-      <span>{{ t('component.table.settingRedo') }}</span>
+      <span>刷新</span>
     </template>
     <RedoOutlined @click="redo" />
   </Tooltip>
 </template>
 <script lang="ts">
-  import { defineComponent } from 'vue';
-  import { useTableContext } from '../../hooks/useTableContext';
-  import { Tooltip } from 'ant-design-vue';
-  import { RedoOutlined } from '@ant-design/icons-vue';
-  import { useI18n } from '/@/hooks/web/useI18n';
+import { defineComponent } from 'vue';
+import { useTableContext } from '../../hooks/useTableContext';
+import { Tooltip } from 'ant-design-vue';
+import { RedoOutlined } from '@ant-design/icons-vue';
 
-  export default defineComponent({
-    name: 'RedoSetting',
-    components: {
-      RedoOutlined,
-      Tooltip,
-    },
+export default defineComponent({
+  name: 'RedoSetting',
+  components: {
+    RedoOutlined,
+    Tooltip,
+  },
 
-    setup() {
-      const table = useTableContext();
-      const { t } = useI18n();
+  setup() {
+    const table = useTableContext();
 
-      function redo() {
-        table.reload();
-      }
+    function redo() {
+      table.reload();
+    }
 
-      return {
-        redo,
-        t,
-      };
-    },
-  });
+    return {
+      redo,
+    };
+  },
+});
 </script>

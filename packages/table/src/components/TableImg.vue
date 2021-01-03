@@ -1,5 +1,5 @@
 <template>
-  <div :class="prefixCls" v-if="imgList && imgList.length">
+  <div v-if="imgList && imgList.length" :class="prefixCls">
     <PreviewGroup>
       <template v-for="img in imgList" :key="img">
         <Image :width="size" :src="img" />
@@ -8,32 +8,31 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, PropType } from 'vue';
-  import { useDesign } from '/@/hooks/web/useDesign';
+import { defineComponent, PropType } from 'vue';
 
-  import { Image } from 'ant-design-vue';
+import { Image } from 'ant-design-vue';
 
-  export default defineComponent({
-    name: 'TableImage',
-    components: { Image, PreviewGroup: Image.PreviewGroup },
-    props: {
-      imgList: {
-        type: Array as PropType<string[]>,
-        default: null,
-      },
-      size: {
-        type: Number as PropType<number>,
-        default: 40,
-      },
+export default defineComponent({
+  name: 'TableImage',
+  components: { Image, PreviewGroup: Image.PreviewGroup },
+  props: {
+    imgList: {
+      type: Array as PropType<string[]>,
+      default: null,
     },
-    setup() {
-      const { prefixCls } = useDesign('basic-table-img');
-      return { prefixCls };
+    size: {
+      type: Number as PropType<number>,
+      default: 40,
     },
-  });
+  },
+  setup() {
+    const prefixCls = 'bfr-table-img';
+    return { prefixCls };
+  },
+});
 </script>
 <style lang="less">
-  @prefix-cls: ~'@{namespace}-basic-table-img';
+  @prefix-cls: ~'bfr-bfr-table-img';
 
   .@{prefix-cls} {
     display: flex;

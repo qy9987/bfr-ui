@@ -100,7 +100,6 @@ export interface TableActionType {
   getDataSource: <T = Recordable>() => T[];
   setLoading: (loading: boolean) => void;
   setProps: (props: Partial<BasicTableProps>) => void;
-  redoHeight: () => void;
   setSelectedRowKeys: (rowKeys: string[] | number[]) => void;
   getPaginationRef: () => PaginationProps | boolean;
   getSize: () => SizeType;

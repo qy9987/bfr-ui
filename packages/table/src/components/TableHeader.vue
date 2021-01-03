@@ -1,53 +1,52 @@
 <template>
-  <slot name="tableTitle" v-if="$slots.tableTitle" />
-  <TableTitle :helpMessage="titleHelpMessage" :title="title" v-if="!$slots.tableTitle && title" />
+  <slot v-if="$slots.tableTitle" name="tableTitle" />
+  <TableTitle v-if="!$slots.tableTitle && title" :help-message="titleHelpMessage" :title="title" />
 
   <div :class="`${prefixCls}__toolbar`">
     <slot name="toolbar" />
-    <Divider type="vertical" v-if="$slots.toolbar" />
-    <TableSetting :setting="tableSetting" v-if="showTableSetting" />
+    <Divider v-if="$slots.toolbar" type="vertical" />
+    <TableSetting v-if="showTableSetting" :setting="tableSetting" />
   </div>
 </template>
 <script lang="ts">
-  import type { TableSetting } from '../types/table';
-  import type { PropType } from 'vue';
-  import { Divider } from 'ant-design-vue';
-  import { defineComponent } from 'vue';
+import type { TableSetting } from '../types/table';
+import type { PropType } from 'vue';
+import { Divider } from 'ant-design-vue';
+import { defineComponent } from 'vue';
 
-  import { useDesign } from '/@/hooks/web/useDesign';
-  import TableSettingComp from './settings/index.vue';
-  import TableTitle from './TableTitle.vue';
+import TableSettingComp from './settings/index.vue';
+import TableTitle from './TableTitle.vue';
 
-  export default defineComponent({
-    name: 'BasicTableHeader',
-    components: {
-      Divider,
-      TableTitle,
-      TableSetting: TableSettingComp,
+export default defineComponent({
+  name: 'BasicTableHeader',
+  components: {
+    Divider,
+    TableTitle,
+    TableSetting: TableSettingComp,
+  },
+  props: {
+    title: {
+      type: [Function, String] as PropType<string | ((data: Recordable) => string)>,
     },
-    props: {
-      title: {
-        type: [Function, String] as PropType<string | ((data: Recordable) => string)>,
-      },
-      tableSetting: {
-        type: Object as PropType<TableSetting>,
-      },
-      showTableSetting: {
-        type: Boolean,
-      },
-      titleHelpMessage: {
-        type: [String, Array] as PropType<string | string[]>,
-        default: '',
-      },
+    tableSetting: {
+      type: Object as PropType<TableSetting>,
     },
-    setup() {
-      const { prefixCls } = useDesign('basic-table-header');
-      return { prefixCls };
+    showTableSetting: {
+      type: Boolean,
     },
-  });
+    titleHelpMessage: {
+      type: [String, Array] as PropType<string | string[]>,
+      default: '',
+    },
+  },
+  setup() {
+    const prefixCls = 'bfr-table-header';
+    return { prefixCls };
+  },
+});
 </script>
 <style lang="less">
-  @prefix-cls: ~'@{namespace}-basic-table-header';
+@prefix-cls: ~'bfr-table-header';
 
   .@{prefix-cls} {
     &__toolbar {

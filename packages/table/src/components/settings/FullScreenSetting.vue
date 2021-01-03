@@ -1,43 +1,40 @@
 <template>
   <Tooltip placement="top">
     <template #title>
-      <span>{{ t('component.table.settingFullScreen') }}</span>
+      <span>全屏</span>
     </template>
-    <FullscreenOutlined @click="handleFullScreen" v-if="!isFullscreenRef" />
-    <FullscreenExitOutlined @click="handleFullScreen" v-else />
+    <FullscreenOutlined v-if="!isFullscreenRef" @click="handleFullScreen" />
+    <FullscreenExitOutlined v-else @click="handleFullScreen" />
   </Tooltip>
 </template>
 <script lang="ts">
-  import { defineComponent } from 'vue';
-  import { useTableContext } from '../../hooks/useTableContext';
-  import { Tooltip } from 'ant-design-vue';
-  import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons-vue';
-  import { useFullscreen } from '/@/hooks/web/useFullScreen';
-  import { useI18n } from '/@/hooks/web/useI18n';
+import { defineComponent } from 'vue';
+import { useTableContext } from '../../hooks/useTableContext';
+import { Tooltip } from 'ant-design-vue';
+import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons-vue';
+import { useFullscreen } from '@bfr-ui/hooks/web/useFullScreen';
 
-  export default defineComponent({
-    name: 'FullScreenSetting',
-    components: {
-      FullscreenExitOutlined,
-      FullscreenOutlined,
-      Tooltip,
-    },
+export default defineComponent({
+  name: 'FullScreenSetting',
+  components: {
+    FullscreenExitOutlined,
+    FullscreenOutlined,
+    Tooltip,
+  },
 
-    setup() {
-      const table = useTableContext();
-      const { t } = useI18n();
+  setup() {
+    const table = useTableContext();
 
-      const { toggleFullscreen, isFullscreenRef } = useFullscreen(table.wrapRef);
+    const { toggleFullscreen, isFullscreenRef } = useFullscreen(table.wrapRef);
 
-      function handleFullScreen() {
-        toggleFullscreen();
-      }
+    function handleFullScreen() {
+      toggleFullscreen();
+    }
 
-      return {
-        handleFullScreen,
-        isFullscreenRef,
-        t,
-      };
-    },
-  });
+    return {
+      handleFullScreen,
+      isFullscreenRef,
+    };
+  },
+});
 </script>

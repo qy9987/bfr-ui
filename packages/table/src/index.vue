@@ -9,21 +9,6 @@
       },
     ]"
   >
-    <!-- <BasicForm
-      v-if="getBindValues.useSearchForm"
-      submit-on-reset
-      v-bind="getFormProps"
-      :submit-button-options="{ loading: getLoading }"
-      :table-action="tableAction"
-      @register="registerForm"
-      @submit="handleSearchInfoChange"
-      @advanced-change="redoHeight"
-    >
-      <template v-for="item in getFormSlotKeys" #[replaceFormSlotKey(item)]="data">
-        <slot :name="item" v-bind="data"></slot>
-      </template>
-    </BasicForm> -->
-
     <Table
       v-show="getEmptyDataIsShowTable"
       ref="tableElRef"
@@ -43,7 +28,6 @@ import { PaginationProps } from './types/pagination';
 
 import { defineComponent, ref, computed, unref } from 'vue';
 import { Table } from 'ant-design-vue';
-// import { BasicForm, useForm } from '/@/components/Form/index';
 
 import { isFunction } from '@bfr-ui/utils/is';
 
@@ -60,7 +44,6 @@ import { useTableStyle } from './hooks/useTableStyle';
 import { useTableHeader } from './hooks/useTableHeader';
 import { createTableContext } from './hooks/useTableContext';
 import { useTableFooter } from './hooks/useTableFooter';
-import { useTableForm } from './hooks/useTableForm';
 
 import { basicProps } from './props';
 // import { useExpose } from '/@/hooks/core/useExpose';
@@ -81,7 +64,7 @@ export default defineComponent({
     'row-mouseleave',
   ],
   setup(props, { attrs, emit, slots }) {
-    const tableElRef = ref<ComponentElement>(null);
+    const tableElRef = ref<ComponentRef>(null);
 
     const wrapRef = ref<Nullable<HTMLDivElement>>(null);
     const innerPropsRef = ref<Partial<BasicTableProps>>();
@@ -132,9 +115,8 @@ export default defineComponent({
       setSelectedRowKeys,
     } = useRowSelection(getProps, emit);
 
-    const { getScrollRef, redoHeight } = useTableScroll(
+    const { getScrollRef } = useTableScroll(
       getProps,
-      tableElRef,
       getColumnsRef,
       getRowSelectionRef,
     );
@@ -158,12 +140,6 @@ export default defineComponent({
       getDataSourceRef,
     );
 
-    const {
-      getFormProps,
-      replaceFormSlotKey,
-      getFormSlotKeys,
-      handleSearchInfoChange,
-    } = useTableForm(getProps, slots, fetch);
 
     const getBindValues = computed(() => {
       let propsData: Recordable = {
@@ -227,7 +203,6 @@ export default defineComponent({
       deleteSelectRowByKey,
       setPagination,
       setTableData,
-      redoHeight,
       setSelectedRowKeys,
       setColumns,
       setLoading,
@@ -251,17 +226,11 @@ export default defineComponent({
       tableElRef,
       getBindValues,
       getLoading,
-      // registerForm,
-      handleSearchInfoChange,
       getEmptyDataIsShowTable,
       handleTableChange,
       getRowClassName,
       wrapRef,
       tableAction,
-      redoHeight,
-      getFormProps,
-      replaceFormSlotKey,
-      getFormSlotKeys,
       prefixCls,
     };
   },

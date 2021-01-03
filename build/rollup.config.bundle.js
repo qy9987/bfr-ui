@@ -25,6 +25,7 @@ const inputOptions =  {
         ],
         'exclude': [
           'node_modules',
+          'packages/**/__tests__',
         ],
       },
       abortOnError: false,
@@ -47,7 +48,8 @@ const inputOptions =  {
   },
 };
 const outputOptions = {
-  dir: 'lib',
+  // dir: 'lib',
+  file: 'lib/index.esm.js',
   format: 'es',
 
 };

@@ -46,13 +46,14 @@ module.exports = {
         },
       },
     ],
+    '@typescript-eslint/ban-types': 'off',
     // vue
     'vue/no-v-html': 'off',
     'vue/singleline-html-element-content-newline': 'off',
     'vue/html-self-closing': ['error', {
       html: {
         void: 'never',
-        normal: 'never',
+        normal: 'always',
         component: 'always',
       },
     }],

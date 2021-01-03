@@ -3,10 +3,10 @@ import type { PaginationProps } from '../types/pagination';
 
 import { ref, unref, ComputedRef, computed, onMounted, watchEffect } from 'vue';
 
-import { useTimeoutFn } from '/@/hooks/core/useTimeout';
+import { useTimeout } from '@bfr-ui/hooks/core/useTimeout';
 
-import { buildUUID } from '/@/utils/uuid';
-import { isFunction, isBoolean } from '/@/utils/is';
+import { buildUUID } from '@bfr-ui/utils/uuid';
+import { isFunction, isBoolean } from '@bfr-ui/utils/is';
 import { get } from 'lodash-es';
 
 import { FETCH_SETTING, ROW_KEY, PAGE_SIZE } from '../const';
@@ -20,7 +20,7 @@ interface ActionType {
 export function useDataSource(
   propsRef: ComputedRef<BasicTableProps>,
   { getPaginationInfo, setPagination, setLoading, getFieldsValue }: ActionType,
-  emit: EmitType
+  emit: EmitType,
 ) {
   const dataSourceRef = ref<Recordable[]>([]);
 
@@ -31,7 +31,7 @@ export function useDataSource(
 
   function setTableKey(items: any[]) {
     if (!items || !Array.isArray(items)) return;
-    items.forEach((item) => {
+    items.forEach(item => {
       if (!item[ROW_KEY]) {
         item[ROW_KEY] = buildUUID();
       }
@@ -61,7 +61,7 @@ export function useDataSource(
 
       if (firstItem && lastItem) {
         if (!firstItem[ROW_KEY] || !lastItem[ROW_KEY]) {
-          unref(dataSourceRef).forEach((item) => {
+          unref(dataSourceRef).forEach(item => {
             if (!item[ROW_KEY]) {
               item[ROW_KEY] = buildUUID();
             }
@@ -77,7 +77,7 @@ export function useDataSource(
 
   async function fetch(opt?: FetchParams) {
     const { api, searchInfo, fetchSetting, beforeFetch, afterFetch, useSearchForm } = unref(
-      propsRef
+      propsRef,
     );
     if (!api || !isFunction(api)) return;
     try {
@@ -162,7 +162,7 @@ export function useDataSource(
   }
 
   onMounted(() => {
-    useTimeoutFn(() => {
+    useTimeout(() => {
       unref(propsRef).immediate && fetch();
     }, 0);
   });
