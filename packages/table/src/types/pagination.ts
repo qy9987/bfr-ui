@@ -83,7 +83,7 @@ export interface PaginationProps {
    * @default ''
    * @type string
    */
-  size?: string;
+  size?: 'small'| '';
 
   /**
    * whether to setting simple mode

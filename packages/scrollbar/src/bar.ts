@@ -91,12 +91,12 @@ export default defineComponent({
       h(
         'div',
         {
-          class: ['scrollbar__bar', 'is-' + bar.value.key],
+          class: ['bfr-scrollbar__bar', 'is-' + bar.value.key],
           onMousedown: clickTrackHandler,
         },
         h('div', {
           ref: thumb,
-          class: 'scrollbar__thumb',
+          class: 'bfr-scrollbar__thumb',
           onMousedown: clickThumbHandler,
           style: renderThumbStyle({
             size: props.size,

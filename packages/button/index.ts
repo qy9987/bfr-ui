@@ -1,6 +1,6 @@
-import Button from './src/BasicButton.vue';
-import PopConfirmButton from './src/PopConfirmButton.vue';
-import { withInstall } from '@bfr-ui/utils/vue';
-
-withInstall(Button, PopConfirmButton);
-export { Button, PopConfirmButton };
+import { App } from 'vue';
+import Button from './src/index.vue';
+Button.install = (app: App) => {
+  app.component(Button.name, Button);
+};
+export default Button;

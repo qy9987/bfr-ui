@@ -1,4 +1,4 @@
-import { debounce, DebouncedFunc } from 'lodash';
+import { debounce } from 'lodash';
 export interface DebounceOptions {
   // 指定调用在节流开始前
   leading?: boolean;
@@ -7,7 +7,7 @@ export interface DebounceOptions {
   // 只执行一次
   once?: boolean;
 }
-export type DebounceResult = [DebouncedFunc<(this: unknown, ...args: any) => void>, ()=>void];
+export type DebounceResult = [(this: unknown, ...args: any) => void, ()=>void];
 /**
  *
  * @param handle

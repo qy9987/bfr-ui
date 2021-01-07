@@ -2,7 +2,7 @@ import type { BasicTableProps, TableRowSelection } from '../types/table';
 
 import { computed, ref, unref, ComputedRef } from 'vue';
 
-/* eslint-disable */
+
 export function useRowSelection(propsRef: ComputedRef<BasicTableProps>, emit: EmitType) {
   const selectedRowKeysRef = ref<string[]>([]);
   const selectedRowRef = ref<Recordable[]>([]);
@@ -15,6 +15,7 @@ export function useRowSelection(propsRef: ComputedRef<BasicTableProps>, emit: Em
     return {
       selectedRowKeys: unref(selectedRowKeysRef),
       hideDefaultSelections: false,
+      // TODO onChange方法有待商讨，确定不会被覆盖？
       onChange: (selectedRowKeys: string[], selectedRows: any[]) => {
         selectedRowKeysRef.value = selectedRowKeys;
         selectedRowRef.value = selectedRows;
@@ -38,7 +39,7 @@ export function useRowSelection(propsRef: ComputedRef<BasicTableProps>, emit: Em
 
   function deleteSelectRowByKey(key: string) {
     const selectedRowKeys = unref(selectedRowKeysRef);
-    const index = selectedRowKeys.findIndex((item) => item === key);
+    const index = selectedRowKeys.findIndex(item => item === key);
     if (index !== -1) {
       unref(selectedRowKeysRef).splice(index, 1);
     }
@@ -54,6 +55,7 @@ export function useRowSelection(propsRef: ComputedRef<BasicTableProps>, emit: Em
   }
 
   function getRowSelection() {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return unref(getRowSelectionRef)!;
   }
 

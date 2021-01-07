@@ -1,4 +1,4 @@
-import type { VNodeChild } from 'vue';
+import type { VNode, VNodeChild } from 'vue';
 import type { PaginationProps } from './pagination';
 // import type { FormProps } from '/@/components/Form';
 import type {
@@ -101,21 +101,21 @@ export interface TableActionType {
   setLoading: (loading: boolean) => void;
   setProps: (props: Partial<BasicTableProps>) => void;
   setSelectedRowKeys: (rowKeys: string[] | number[]) => void;
-  getPaginationRef: () => PaginationProps | boolean;
+  getPagination: () => PaginationProps | boolean;
   getSize: () => SizeType;
   getRowSelection: () => TableRowSelection<Recordable>;
   getCacheColumns: () => BasicColumn[];
 }
 
 export interface FetchSetting {
-  // 请求接口当前页数
-  pageField: string;
+  // 请求接口当前页数字段
+  pageField?: string;
   // 每页显示多少条
-  sizeField: string;
+  sizeField?: string;
   // 请求结果列表字段  支持 a.b.c
-  listField: string;
+  listField?: string;
   // 请求结果总数字段  支持 a.b.c
-  totalField: string;
+  totalField?: string;
 }
 
 export interface TableSetting {
@@ -148,9 +148,9 @@ export interface BasicTableProps<T = any> {
   // 接口请求对象
   api?: (...arg: any) => Promise<any>;
   // 请求之前处理参数
-  beforeFetch?: Fn;
+  beforeFetch?: (params: Recordable)=>Recordable;
   // 自定义处理接口返回参数
-  afterFetch?: Fn;
+  afterFetch?: (resArr: Record< string, any>[])=>Record< string, any>[];
   // 查询条件请求之前处理
   handleSearchInfoFn?: Fn;
   // 请求接口配置
@@ -174,21 +174,17 @@ export interface BasicTableProps<T = any> {
   actionColumn?: BasicColumn;
   // 文本超过宽度是否显示。。。
   ellipsis?: boolean;
-  // 是否可以自适应高度
-  canResize?: boolean;
-  // 自适应高度偏移， 计算结果-偏移量
-  resizeHeightOffset?: number;
 
   // 在分页改变的时候清空选项
   clearSelectOnPageChange?: boolean;
-  //
+  // 表格行 key 的取值
   rowKey?: string | ((record: Recordable) => string);
   // 数据
   dataSource?: Recordable[];
   // 标题右侧提示
   titleHelpMessage?: string | string[];
   // 表格滚动最大高度
-  maxHeight?: number;
+  maxHeight?: string|number;
   // 是否显示边框
   bordered?: boolean;
   // 分页配置
@@ -196,124 +192,82 @@ export interface BasicTableProps<T = any> {
   // loading加载
   loading?: boolean;
 
-  /**
-   * The column contains children to display
-   * @default 'children'
-   * @type string | string[]
-   */
+  // 指定树形结构的列名
   childrenColumnName?: string | string[];
 
-  /**
-   * Override default table elements
-   * @type object
-   */
+  // 覆盖默认的table元素
   components?: Recordable;
 
-  /**
-   * Expand all rows initially
-   * @default false
-   * @type boolean
-   */
+  // 初始时，是否展开所有行
   defaultExpandAllRows?: boolean;
 
-  /**
-   * Initial expanded row keys
-   * @type string[]
-   */
+  // 默认展开的行
   defaultExpandedRowKeys?: string[];
 
-  /**
-   * Current expanded row keys
-   * @type string[]
-   */
+  // 展开的行
   expandedRowKeys?: string[];
 
-  /**
-   * Expanded container render for each row
-   * @type Function
-   */
+  // 额外的展开行
   expandedRowRender?: (record?: ExpandedRowRenderRecord<T>) => VNodeChild | JSX.Element;
 
-  /**
-   * Customize row expand Icon.
-   * @type Function | VNodeChild
-   */
-  expandIcon?: Fn | VNodeChild | JSX.Element;
+  // 自定义展开图标
+  expandIcon?: (props)=>(VNode | VNodeChild | JSX.Element);
 
-  /**
-   * Whether to expand row by clicking anywhere in the whole row
-   * @default false
-   * @type boolean
-   */
+  // 通过点击行来展开子行
   expandRowByClick?: boolean;
 
-  /**
-   * The index of `expandIcon` which column will be inserted when `expandIconAsCell` is false. default 0
-   */
+  // 展开的图标显示列
   expandIconColumnIndex?: number;
 
-  /**
-   * Table footer renderer
-   * @type Function | VNodeChild
-   */
-  footer?: Fn | VNodeChild | JSX.Element;
+  // 表格尾部
+  footer?: (currentPageData)=>( VNodeChild | JSX.Element);
 
-  /**
-   * Indent size in pixels of tree data
-   * @default 15
-   * @type number
-   */
+  // 展示树形数据时，每层缩进的宽度
   indentSize?: number;
 
   /**
-   * i18n text including filter, sort, empty text, etc
+   * 默认文案设置，目前包括排序、过滤、空数据文案
    * @default { filterConfirm: 'Ok', filterReset: 'Reset', emptyText: 'No Data' }
    * @type object
    */
   locale?: Recordable;
 
-  /**
-   * Row's className
-   * @type Function
-   */
+  // 表格行的类名
   rowClassName?: (record: TableCustomRecord<T>) => string;
 
-  /**
-   * Row selection config
-   * @type object
-   */
+  // 列表项是否可选择
   rowSelection?: TableRowSelection;
 
   /**
-   * Set horizontal or vertical scrolling, can also be used to specify the width and height of the scroll area.
-   * It is recommended to set a number for x, if you want to set it to true,
-   * you need to add style .ant-table td { white-space: nowrap; }.
-   * @type object
+   * 设置横向或纵向滚动，也可用于指定滚动区域的宽和高，
+   * 建议为 x 设置一个数字，如果要设置为 true，
+   * 需要配合样式 .ant-table td { white-space: nowrap; }
+   * @type  { x: string | number | true; y: string | number }
    */
-  scroll?: { x?: number | true; y?: number };
+  scroll?: { x?: string | number | true; y?: string | number };
 
   /**
-   * Whether to show table header
+   * 是否显示表头
    * @default true
    * @type boolean
    */
   showHeader?: boolean;
 
   /**
-   * Size of table
+   * 表格大小
    * @default 'default'
    * @type string
    */
   size?: SizeType;
 
   /**
-   * Table title renderer
-   * @type Function | ScopedSlot
+   * 表格标题
+   * @type Function| string
    */
-  title?: VNodeChild | JSX.Element | string | ((data: Recordable) => string);
+  title?: string | ((data: Recordable) => string| VNodeChild | JSX.Element);
 
   /**
-   * Set props on per header row
+   * 设置头部行属性
    * @type Function
    */
   customHeaderRow?: (column: ColumnProps, index: number) => Recordable;
@@ -325,41 +279,36 @@ export interface BasicTableProps<T = any> {
   customRow?: (record: T, index: number) => Recordable;
 
   /**
-   * `table-layout` attribute of table element
-   * `fixed` when header/columns are fixed, or using `column.ellipsis`
-   *
-   * @see https://developer.mozilla.org/en-US/docs/Web/CSS/table-layout
-   * @version 1.5.0
+   * 表格元素的 table-layout 属性，设为 fixed 表示内容不会影响列的布局
+   * @default 'fixed'
+   * @type string
    */
-  tableLayout?: 'auto' | 'fixed' | string;
+  tableLayout?: 'auto' | 'fixed' | '';
 
   /**
-   * the render container of dropdowns in table
-   * @param triggerNode
-   * @version 1.5.0
+   * 设置表格内各类浮层的渲染节点，如筛选菜单
+   * @default () => TableHtmlElement
+   * @type (triggerNode: HTMLElement) => HTMLElement;
    */
   getPopupContainer?: (triggerNode?: HTMLElement) => HTMLElement;
 
   /**
-   * Data can be changed again before rendering.
-   * The default configuration of general user empty data.
-   * You can configured globally through [ConfigProvider](https://antdv.com/components/config-provider-cn/)
-   *
-   * @version 1.5.4
+   * 数据渲染前可以再次改变，一般用户空数据的默认配置，可以通过 [ConfigProvider](https://2x.antdv.com/components/config-provider-cn/) 全局统一配置
+   * ({ text, column, record, index }) => any
    */
-  transformCellText?: Fn;
+  transformCellText?: Fn ;
 
   /**
-   * Callback executed when pagination, filters or sorter is changed
+   * 表格分页、筛选、搜索功能修改时的回调函数
    * @param pagination
    * @param filters
    * @param sorter
-   * @param currentDataSource
+   * @param {currentDataSource}
    */
   onChange?: (pagination: any, filters: any, sorter: any, extra: any) => void;
 
   /**
-   * Callback executed when the row expand icon is clicked
+   * 展开行图标被点击时的回调函数
    *
    * @param expanded
    * @param record
@@ -367,7 +316,7 @@ export interface BasicTableProps<T = any> {
   onExpand?: (expande: boolean, record: T) => void;
 
   /**
-   * Callback executed when the expanded rows change
+   * 展开行图标被点击时的回调函数
    * @param expandedRows
    */
   onExpandedRowsChange?: (expandedRows: string[] | number[]) => void;

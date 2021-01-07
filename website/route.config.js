@@ -2,7 +2,8 @@ import { defineAsyncComponent } from 'vue';
 import navConfig from './nav.config';
 
 const LoadingComponent = {
-  template: `<div v-loading="true" style="min-height: 500px; width: 100%;"></div>`,
+  //v-loading="true"
+  template: `<div style="min-height: 500px; width: 100%;"></div>`,
 };
 const ErrorComponent = {
   template: `
@@ -23,7 +24,7 @@ const load = function(path) {
   return getAsyncComponent(() => import(/* webpackChunkName: "zh-CN" */ `./pages/${path}.vue`));
 };
 const loadDocs = function(path) {
-  return getAsyncComponent(() => import(/* webpackChunkName: "DOCS zh-CN" */ `./docs/zh-CN${path}.md`));
+  return getAsyncComponent(() => import(/* webpackChunkName: "DOCS zh-CN" */ `./docs${path}.md`));
 };
 
 const registerRoute = navConfig => {
@@ -54,9 +55,7 @@ const registerRoute = navConfig => {
     });
   });
   function addRoute(page, index) {
-    const component = page.path === '/changelog'
-      ? load( 'changelog')
-      : loadDocs(page.path);
+    const component = loadDocs(page.path);
     let child = {
       path: page.path.slice(1),
       meta: {
@@ -75,16 +74,6 @@ const registerRoute = navConfig => {
 let route = registerRoute(navConfig);
 
 const generateMiscRoutes = function() {
-  let guideRoute = {
-    path: `/guide`, // 指南
-    redirect: `/guide/design`,
-    component: load('guide'),
-    children: [{
-      path: 'nav', // 导航
-      name: 'guide-nav',
-      component: load('nav'),
-    }],
-  };
 
   let indexRoute = {
     path: `/`, // 首页
@@ -92,7 +81,7 @@ const generateMiscRoutes = function() {
     component: load('index'),
   };
 
-  return [guideRoute,  indexRoute];
+  return [indexRoute];
 };
 
 route = route.concat(generateMiscRoutes());
@@ -104,5 +93,4 @@ route = route.concat([{
   path: '/*',
   redirect: { path: `/` },
 }]);
-
 export default route;

@@ -79,8 +79,8 @@ export function useTable(
     setSelectedRowKeys: (keys: string[] | number[]) => {
       getTableInstance().setSelectedRowKeys(keys);
     },
-    getPaginationRef: () => {
-      return getTableInstance().getPaginationRef();
+    getPagination: () => {
+      return getTableInstance().getPagination();
     },
     getSize: () => {
       return getTableInstance().getSize();

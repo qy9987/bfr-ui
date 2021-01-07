@@ -30,25 +30,20 @@ const config = {
     publicPath: '/',
     filename: isFullMode ? 'index.full.js' : 'index.js',
     libraryTarget: 'umd',
-    library: 'ElementPlus',
+    library: 'BfrUI',
     umdNamedDefine: true,
     globalObject: 'typeof self !== \'undefined\' ? self : this',
   },
   module: {
-    rules: [
-
-      {
-        test: /\.less$/,
-        use: ['style-loader','css-loader','less-loader'],
-      },{
-        test: /\.vue$/,
-        use: 'vue-loader',
-      },
-      {
-        test: /\.(ts|js)x?$/,
-        exclude: /node_modules/,
-        loader: 'babel-loader',
-      },
+    rules: [{
+      test: /\.vue$/,
+      use: 'vue-loader',
+    },
+    {
+      test: /\.(ts|js)x?$/,
+      exclude: /node_modules/,
+      loader: 'babel-loader',
+    },
     ],
   },
   resolve: {

@@ -1,4 +1,4 @@
-import { DebouncedFunc, throttle } from 'lodash';
+import { throttle } from 'lodash';
 export interface ThrottleOptions {
   // 指定调用在节流开始前
   leading?: boolean;
@@ -7,7 +7,7 @@ export interface ThrottleOptions {
   // 只执行一次
   once?: boolean;
 }
-export type ThrottleResult = [DebouncedFunc<(this: unknown, ...args: any) => void>, () => void];
+export type ThrottleResult = [(this: unknown, ...args: any) => void, () => void];
 
 /**
  *

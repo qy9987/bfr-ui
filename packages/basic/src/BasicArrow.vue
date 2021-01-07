@@ -1,7 +1,3 @@
-<!--
- * @Author: Vben
- * @Description: Arrow component with animation
--->
 <template>
   <span :class="getClass">
     <RightOutlined />
@@ -44,38 +40,3 @@ export default defineComponent({
   },
 });
 </script>
-<style lang="less" scoped>
-  // @import (reference) '../../../design/index.less';
-  @prefix-cls: ~'bfr-basic-arrow';
-
-  .@{prefix-cls} {
-    display: inline-block;
-    transform: rotate(0deg);
-    transition: all 0.3s ease 0.1s;
-    transform-origin: center center;
-
-    &--active {
-      transform: rotate(90deg);
-    }
-
-    &.inset {
-      line-height: 0px;
-    }
-
-    &.top {
-      transform: rotate(-90deg);
-    }
-
-    &.bottom {
-      transform: rotate(90deg);
-    }
-
-    &.top.@{prefix-cls}--active {
-      transform: rotate(90deg);
-    }
-
-    &.bottom.@{prefix-cls}--active {
-      transform: rotate(-90deg);
-    }
-  }
-</style>

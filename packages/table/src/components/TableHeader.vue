@@ -45,19 +45,3 @@ export default defineComponent({
   },
 });
 </script>
-<style lang="less">
-@prefix-cls: ~'bfr-table-header';
-
-  .@{prefix-cls} {
-    &__toolbar {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-
-      > * {
-        margin-right: 8px;
-      }
-    }
-  }
-</style>

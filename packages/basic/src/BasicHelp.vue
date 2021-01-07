@@ -107,25 +107,3 @@ export default defineComponent({
   },
 });
 </script>
-<style lang="less">
-  // @import (reference) '@bfr-ui/theme/index.less';
-  @prefix-cls: ~'bfr-basic-help';
-
-  .@{prefix-cls} {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 14px;
-    color: @text-color-help-dark;
-    cursor: pointer;
-
-    &:hover {
-      color: @primary-color;
-    }
-
-    &__wrap {
-      p {
-        margin-bottom: 0;
-      }
-    }
-  }
-</style>

@@ -1,0 +1,80 @@
+@import './common/var.less';
+.bfr-basic-arrow {
+  @prefix-cls: ~'bfr-basic-arrow';
+  display: inline-block;
+  transform: rotate(0deg);
+  transition: all 0.3s ease 0.1s;
+  transform-origin: center center;
+
+  &--active {
+    transform: rotate(90deg);
+  }
+
+  &.inset {
+    line-height: 0px;
+  }
+
+  &.top {
+    transform: rotate(-90deg);
+  }
+
+  &.bottom {
+    transform: rotate(90deg);
+  }
+
+  &.top.@{prefix-cls}--active {
+    transform: rotate(90deg);
+  }
+
+  &.bottom.@{prefix-cls}--active {
+    transform: rotate(-90deg);
+  }
+}
+
+.bfr-basic-help {
+  @prefix-cls: ~'bfr-basic-help';
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 14px;
+  color: @text-color-help-dark;
+  cursor: pointer;
+
+  &:hover {
+    color: @primary-color;
+  }
+
+  &__wrap {
+    p {
+      margin-bottom: 0;
+    }
+  }
+}
+
+
+.bfr-basic-title {
+  @prefix-cls: ~'bfr-basic-title';
+  position: relative;
+  display: flex;
+  padding-left: 7px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  color: @text-color-base;
+
+  // .unselect();
+
+  &.show-span::before {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    width: 3px;
+    height: 16px;
+    margin-right: 4px;
+    background: @primary-color;
+    content: '';
+  }
+
+  &__help {
+    margin-left: 10px;
+  }
+}

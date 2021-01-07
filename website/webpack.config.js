@@ -79,6 +79,7 @@ const config = {
   devServer: {
     inline: true,
     hot: true,
+    host: '0.0.0.0',
     stats: 'minimal',
     publicPath: '/',
     contentBase: __dirname,
@@ -93,14 +94,14 @@ const config = {
 };
 
 const cssRule = {
-  test: /\.(sass|scss|css)$/,
+  test: /\.(less|css)$/,
   use: [
     'css-loader',
     {
-      loader: 'sass-loader',
-      options: {
-        implementation: require('sass'),
-      },
+      loader: 'less-loader',
+      // options: {
+      //   implementation: require('less'),
+      // },
     },
 
   ],

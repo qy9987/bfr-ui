@@ -87,9 +87,7 @@ export const basicProps = {
     default: null,
   },
   ellipsis: propTypes.bool.def(true),
-  canResize: propTypes.bool.def(true),
   clearSelectOnPageChange: propTypes.bool,
-  resizeHeightOffset: propTypes.number.def(0),
   rowSelection: {
     type: Object as PropType<TableRowSelection | null>,
     default: null,
@@ -101,7 +99,7 @@ export const basicProps = {
   titleHelpMessage: {
     type: [String, Array] as PropType<string | string[]>,
   },
-  maxHeight: propTypes.number,
+  maxHeight: [String, Number] as PropType<string | number>,
   dataSource: {
     type: Array as PropType<Recordable[]>,
     default: null,
@@ -110,7 +108,7 @@ export const basicProps = {
     type: [String, Function] as PropType<string | ((record: Recordable) => string)>,
     default: '',
   },
-  bordered: propTypes.bool,
+  bordered: propTypes.bool.def(false),
   pagination: {
     type: [Object, Boolean] as PropType<PaginationProps | boolean>,
     default: null,

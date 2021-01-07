@@ -1,49 +1,39 @@
 <template>
-  <div class="scrollbar">
+  <div class="bfr-scrollbar">
     <div
       ref="wrap"
-      :class="[wrapClass, 'scrollbar__wrap', native ? '' : 'scrollbar__wrap--hidden-default']"
+      :class="[wrapClass, 'bfr-scrollbar__wrap',{'bfr-scrollbar__overflow-x': widthPercentage>=100,'bfr-scrollbar__overflow-y': heightPercentage>=100}]"
       :style="style"
       @scroll="handleScroll"
     >
       <component
         :is="tag"
         ref="resize"
-        :class="['scrollbar__view', viewClass]"
+        :class="['bfr-scrollbar__view', viewClass]"
         :style="viewStyle"
       >
         <slot />
       </component>
     </div>
-    <template v-if="!native">
-      <bar :move="moveX" :size="sizeWidth" />
-      <bar vertical :move="moveY" :size="sizeHeight" />
-    </template>
   </div>
 </template>
 <script lang="ts">
-import { addResizeListener, removeResizeListener } from '@bfr-ui/utils/event/resizeEvent';
-
 import { toObject } from './util';
+import { throttle } from 'lodash';
 import {
   defineComponent,
   ref,
-  onMounted,
-  onBeforeUnmount,
-  nextTick,
   provide,
   computed,
+  onMounted,
+  nextTick,
+  onBeforeUnmount,
 } from 'vue';
-import Bar from './bar';
+import { addResizeListener, removeResizeListener } from '@bfr-ui/utils/event/resizeEvent';
 
 export default defineComponent({
-  name: 'Scrollbar',
-  components: { Bar },
+  name: 'BfrScrollbar',
   props: {
-    native: {
-      type: Boolean,
-      default: false,
-    },
     wrapStyle: {
       type: [String, Array],
       default: '',
@@ -66,42 +56,32 @@ export default defineComponent({
       default: 'div',
     },
   },
-  setup(props) {
-    const sizeWidth = ref('0');
-    const sizeHeight = ref('0');
-    const moveX = ref(0);
-    const moveY = ref(0);
+  emits: ['scroll'],
+  setup(props, { emit }) {
+    const heightPercentage = ref(0);
+    const widthPercentage = ref(0);
     const wrap = ref<any>(null);
     const resize = ref<any>(null);
 
     provide('scroll-bar-wrap', wrap);
 
-    const handleScroll = () => {
-      if (!props.native) {
-        moveY.value = (wrap.value.scrollTop * 100) / wrap.value.clientHeight;
-        moveX.value = (wrap.value.scrollLeft * 100) / wrap.value.clientWidth;
-      }
-    };
-
+    const handleScroll = throttle(() => {
+      emit('scroll', { top: wrap.value.scrollTop, left: wrap.value.scrollTop });
+    }, 300, { leading: false });
     const update = () => {
+      console.log(1);
       if (!wrap.value) return;
-
-      const heightPercentage = (wrap.value.clientHeight * 100) / wrap.value.scrollHeight;
-      const widthPercentage = (wrap.value.clientWidth * 100) / wrap.value.scrollWidth;
-
-      sizeHeight.value = heightPercentage < 100 ? heightPercentage + '%' : '';
-      sizeWidth.value = widthPercentage < 100 ? widthPercentage + '%' : '';
+      heightPercentage.value = (wrap.value.clientHeight * 100) / wrap.value.scrollHeight;
+      widthPercentage.value = (wrap.value.clientWidth * 100) / wrap.value.scrollWidth;
     };
 
     onMounted(() => {
-      if (props.native) return;
       nextTick(update);
-      !props.noresize && addResizeListener(resize.value, update);
+      addResizeListener(resize.value, update);
     });
 
     onBeforeUnmount(() => {
-      if (props.native) return;
-      !props.noresize && removeResizeListener(resize.value, update);
+      removeResizeListener(resize.value, update);
     });
     const style = computed(() => {
       let style: any = props.wrapStyle;
@@ -110,91 +90,19 @@ export default defineComponent({
       }
       return style;
     });
+    const scrollToY = (y:number) => {
+      if(!wrap.value) return;
+      wrap.value.scrollTop = y;
+    };
     return {
-      moveX,
-      moveY,
-      sizeWidth,
-      sizeHeight,
+      heightPercentage,
+      widthPercentage,
       style,
       wrap,
       resize,
-      update,
       handleScroll,
+      scrollToY,
     };
   },
 });
 </script>
-<style lang="less">
-  .scrollbar {
-    position: relative;
-    height: 100%;
-    overflow: hidden;
-
-    &__wrap {
-      height: 100%;
-      overflow: scroll;
-
-      &--hidden-default {
-        scrollbar-width: none;
-
-        &::-webkit-scrollbar {
-          display: none;
-          width: 0;
-          height: 0;
-          opacity: 0;
-        }
-      }
-    }
-
-    &__thumb {
-      position: relative;
-      display: block;
-      width: 0;
-      height: 0;
-      cursor: pointer;
-      background-color: rgba(144, 147, 153, 0.3);
-      border-radius: inherit;
-      transition: 0.3s background-color;
-
-      &:hover {
-        background-color: rgba(144, 147, 153, 0.5);
-      }
-    }
-
-    &__bar {
-      position: absolute;
-      right: 2px;
-      bottom: 2px;
-      z-index: 1;
-      border-radius: 4px;
-      opacity: 0;
-      -webkit-transition: opacity 80ms ease;
-      transition: opacity 80ms ease;
-
-      &.is-vertical {
-        top: 2px;
-        width: 6px;
-
-        & > div {
-          width: 100%;
-        }
-      }
-
-      &.is-horizontal {
-        left: 2px;
-        height: 6px;
-
-        & > div {
-          height: 100%;
-        }
-      }
-    }
-  }
-
-  .scrollbar:active > .scrollbar__bar,
-  .scrollbar:focus > .scrollbar__bar,
-  .scrollbar:hover > .scrollbar__bar {
-    opacity: 1;
-    transition: opacity 340ms ease-out;
-  }
-</style>

@@ -6,6 +6,7 @@
       {
         [`${prefixCls}-form-container`]: getBindValues.useSearchForm,
         [`${prefixCls}--inset`]: getBindValues.inset,
+        'bfr-table__noscroll': noScroll
       },
     ]"
   >
@@ -17,7 +18,7 @@
       @change="handleTableChange"
     >
       <template v-for="item in Object.keys($slots)" #[item]="data">
-        <slot :name="item" v-bind="data"></slot>
+        <slot :name="item" v-bind="data" />
       </template>
     </Table>
   </div>
@@ -26,7 +27,7 @@
 import type { BasicTableProps, TableActionType, SizeType, SorterResult } from './types/table';
 import { PaginationProps } from './types/pagination';
 
-import { defineComponent, ref, computed, unref } from 'vue';
+import { defineComponent, ref, computed, unref, getCurrentInstance } from 'vue';
 import { Table } from 'ant-design-vue';
 
 import { isFunction } from '@bfr-ui/utils/is';
@@ -46,17 +47,16 @@ import { createTableContext } from './hooks/useTableContext';
 import { useTableFooter } from './hooks/useTableFooter';
 
 import { basicProps } from './props';
-// import { useExpose } from '/@/hooks/core/useExpose';
 
-import './style/index.less';
 export default defineComponent({
+  name: 'BfrTable',
   components: { Table /*BasicForm*/ },
   props: basicProps,
   emits: [
     'fetch-success',
     'fetch-error',
     'selection-change',
-    'register',
+    // 'register',
     'row-click',
     'row-dbClick',
     'row-contextmenu',
@@ -64,28 +64,31 @@ export default defineComponent({
     'row-mouseleave',
   ],
   setup(props, { attrs, emit, slots }) {
-    const tableElRef = ref<ComponentRef>(null);
-
-    const wrapRef = ref<Nullable<HTMLDivElement>>(null);
-    const innerPropsRef = ref<Partial<BasicTableProps>>();
 
     const prefixCls = 'bfr-table';
-    // const [registerForm, formActions] = useForm();
+    // 设置tableRef
+    const tableElRef = ref<ComponentRef>(null);
+    const wrapRef = ref<Nullable<HTMLDivElement>>(null);
+    // 获取初始props
+    const innerPropsRef = ref<Partial<BasicTableProps>>();
 
-    const getProps = computed(() => {
+    // const [registerForm, formActions] = useForm();
+    // 真实props
+    const realProps = computed(() => {
       return { ...props, ...unref(innerPropsRef) } as BasicTableProps;
     });
-
-    const { getLoading, setLoading } = useLoading(getProps);
-    const { getPaginationInfo, getPagination, setPagination } = usePagination(getProps);
+    const { getLoading, setLoading } = useLoading(realProps);
+    // pagination hook
+    const { paginationInfo, getPagination, setPagination } = usePagination(realProps);
+    // column hook
     const {
       getSortFixedColumns,
       getColumns,
       setColumns,
       getColumnsRef,
       getCacheColumns,
-    } = useColumns(getProps, getPaginationInfo);
-
+    } = useColumns(realProps, paginationInfo);
+    // data-source hook
     const {
       getDataSourceRef,
       getDataSource,
@@ -95,16 +98,16 @@ export default defineComponent({
       reload,
       getAutoCreateKey,
     } = useDataSource(
-      getProps,
+      realProps,
       {
-        getPaginationInfo,
+        paginationInfo,
         setLoading,
         setPagination,
         getFieldsValue:() =>({}), //formActions.getFieldsValue,
       },
       emit,
     );
-
+    // 行选择 hook
     const {
       getRowSelection,
       getRowSelectionRef,
@@ -113,40 +116,44 @@ export default defineComponent({
       getSelectRowKeys,
       deleteSelectRowByKey,
       setSelectedRowKeys,
-    } = useRowSelection(getProps, emit);
-
+    } = useRowSelection(realProps, emit);
+    // 表格滚动hook
     const { getScrollRef } = useTableScroll(
-      getProps,
+      realProps,
       getColumnsRef,
       getRowSelectionRef,
     );
-
-    const { customRow } = useCustomRow(getProps, {
+    // 判断是否需要显示滚动条
+    const noScroll = computed(()=>{
+      return !getScrollRef.value.y;
+    });
+    // 自定义行hook
+    const { customRow } = useCustomRow(realProps, {
       setSelectedRowKeys,
       getSelectRowKeys,
       clearSelectedRowKeys,
       getAutoCreateKey,
       emit,
     });
-
-    const { getRowClassName } = useTableStyle(getProps, prefixCls);
-
-    const { getHeaderProps } = useTableHeader(getProps, slots);
-
+    // 表格样式 hook
+    const { getRowClassName } = useTableStyle(realProps, prefixCls);
+    // 表头 hook
+    const { getHeaderProps } = useTableHeader(realProps, slots);
+    // 表底 hook
     const { getFooterProps } = useTableFooter(
-      getProps,
+      realProps,
       getScrollRef,
       tableElRef,
       getDataSourceRef,
     );
 
-
+    // ant 表格绑定 attrs
     const getBindValues = computed(() => {
       let propsData: Recordable = {
         size: 'middle',
         ...attrs,
         customRow,
-        ...unref(getProps),
+        ...unref(realProps),
         ...unref(getHeaderProps),
         scroll: unref(getScrollRef),
         loading: unref(getLoading),
@@ -154,7 +161,7 @@ export default defineComponent({
         rowSelection: unref(getRowSelectionRef),
         rowKey: unref(getRowKey),
         columns: unref(getSortFixedColumns),
-        pagination: unref(getPaginationInfo),
+        pagination: unref(paginationInfo),
         dataSource: unref(getDataSourceRef),
         footer: unref(getFooterProps),
       };
@@ -163,21 +170,21 @@ export default defineComponent({
       }
       return propsData;
     });
-
+    // 空数据时展示表格
     const getEmptyDataIsShowTable = computed(() => {
-      const { emptyDataIsShowTable, useSearchForm } = unref(getProps);
+      const { emptyDataIsShowTable, useSearchForm } = unref(realProps);
       if (emptyDataIsShowTable || !useSearchForm) {
         return true;
       }
       return !!unref(getDataSourceRef).length;
     });
-
+    // 表格数据change时触发事件
     function handleTableChange(
       pagination: PaginationProps,
       filters: Partial<Recordable<string[]>>,
       sorter: SorterResult,
     ) {
-      const { clearSelectOnPageChange, sortFn } = unref(getProps);
+      const { clearSelectOnPageChange, sortFn } = unref(realProps);
       if (clearSelectOnPageChange) {
         clearSelectedRowKeys();
       }
@@ -209,7 +216,7 @@ export default defineComponent({
       getDataSource,
       setProps,
       getRowSelection,
-      getPaginationRef: getPagination,
+      getPagination,
       getColumns,
       getCacheColumns,
       getSize: () => {
@@ -217,12 +224,16 @@ export default defineComponent({
       },
     };
     createTableContext({ ...tableAction, wrapRef, getBindValues });
+    const instance = getCurrentInstance();
+    if (instance) {
+      Object.assign(instance.proxy, tableAction);
+    }
 
-    // useExpose<TableActionType>(tableAction);
-
-    // emit('register', tableAction, formActions);
+    // emit('register', tableAction);
 
     return {
+      paginationInfo,
+      noScroll,
       tableElRef,
       getBindValues,
       getLoading,

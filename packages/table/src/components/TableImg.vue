@@ -31,19 +31,3 @@ export default defineComponent({
   },
 });
 </script>
-<style lang="less">
-  @prefix-cls: ~'bfr-bfr-table-img';
-
-  .@{prefix-cls} {
-    display: flex;
-
-    .ant-image {
-      margin-right: 4px;
-      cursor: zoom-in;
-
-      img {
-        border-radius: 2px;
-      }
-    }
-  }
-</style>

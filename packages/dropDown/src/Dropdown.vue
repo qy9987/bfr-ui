@@ -25,7 +25,7 @@ import { defineComponent, computed, unref } from 'vue';
 import { Dropdown, Menu } from 'ant-design-vue';
 
 export default defineComponent({
-  name: 'BasicDropdown',
+  name: 'BfrDropdown',
   components: {
     [Dropdown.name]: Dropdown,
     [Menu.name]: Menu,

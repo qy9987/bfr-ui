@@ -2,31 +2,15 @@ import type { PaginationProps } from '../types/pagination';
 import type { BasicTableProps } from '../types/table';
 
 import { computed, unref, ref, ComputedRef } from 'vue';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue';
 
 import { isBoolean } from '@bfr-ui/utils/is';
 
 import { PAGE_SIZE, PAGE_SIZE_OPTIONS } from '../const';
 
-interface ItemRender {
-  page: number;
-  type: 'page' | 'prev' | 'next';
-  originalElement: any;
-}
-
-function itemRender({ page, type, originalElement }: ItemRender) {
-  if (type === 'prev') {
-    return page === 0 ? null : <LeftOutlined />;
-  } else if (type === 'next') {
-    return page === 1 ? null : <RightOutlined />;
-  }
-  return originalElement;
-}
-
 export function usePagination(refProps: ComputedRef<BasicTableProps>) {
   const configRef = ref<PaginationProps>({});
 
-  const getPaginationInfo = computed((): PaginationProps | boolean => {
+  const paginationInfo = computed((): PaginationProps | boolean => {
     const { pagination } = unref(refProps);
 
     if (isBoolean(pagination) && !pagination) {
@@ -40,23 +24,23 @@ export function usePagination(refProps: ComputedRef<BasicTableProps>) {
       showTotal: total => `共 ${total} 条数据`,
       showSizeChanger: true,
       pageSizeOptions: PAGE_SIZE_OPTIONS,
-      itemRender: itemRender,
+      itemRender: isBoolean(pagination)?null:pagination?.itemRender,
       showQuickJumper: true,
       ...(isBoolean(pagination) ? {} : pagination),
       ...unref(configRef),
     };
   });
-
+  // 设置分页组件配置
   function setPagination(info: Partial<PaginationProps>) {
-    const paginationInfo = unref(getPaginationInfo);
+    const unRefPaginationInfo = unref(paginationInfo);
     configRef.value = {
-      ...(!isBoolean(paginationInfo) ? paginationInfo : {}),
+      ...(!isBoolean(unRefPaginationInfo) ? unRefPaginationInfo : {}),
       ...info,
     };
   }
-
+  // 获取分页配置
   function getPagination() {
-    return unref(getPaginationInfo);
+    return unref(paginationInfo);
   }
-  return { getPagination, getPaginationInfo, setPagination };
+  return { getPagination, paginationInfo, setPagination };
 }

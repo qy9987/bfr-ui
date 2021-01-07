@@ -1,0 +1,77 @@
+.bfr-scrollbar {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  
+  &__wrap {
+    height: 100%;
+    overflow: scroll;
+
+    &--hidden-default {
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+        opacity: 0;
+      }
+    }
+  }
+  &__overflow-x {
+    overflow-x: hidden;
+  }
+  &__overflow-y {
+    overflow-y: hidden;
+  }
+  &__thumb {
+    position: relative;
+    display: block;
+    width: 0;
+    height: 0;
+    cursor: pointer;
+    background-color: rgba(144, 147, 153, 0.3);
+    border-radius: inherit;
+    transition: 0.3s background-color;
+
+    &:hover {
+      background-color: rgba(144, 147, 153, 0.5);
+    }
+  }
+
+  &__bar {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    z-index: 1;
+    border-radius: 4px;
+    opacity: 0;
+    -webkit-transition: opacity 80ms ease;
+    transition: opacity 80ms ease;
+
+    &.is-vertical {
+      top: 2px;
+      width: 6px;
+
+      & > div {
+        width: 100%;
+      }
+    }
+
+    &.is-horizontal {
+      left: 2px;
+      height: 6px;
+
+      & > div {
+        height: 100%;
+      }
+    }
+  }
+}
+
+.bfr-scrollbar:active > .bfr-scrollbar__bar,
+.bfr-scrollbar:focus > .bfr-scrollbar__bar,
+.bfr-scrollbar:hover > .bfr-scrollbar__bar {
+  opacity: 1;
+  transition: opacity 340ms ease-out;
+}

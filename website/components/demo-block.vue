@@ -6,41 +6,28 @@
     @mouseleave="hovering = false"
   >
     <div class="source">
-      <slot name="source"></slot>
-    </div>
-    <div ref="meta" class="meta">
-      <div v-if="$slots.default" class="description">
-        <slot></slot>
-      </div>
-      <div class="highlight">
-        <slot name="highlight"></slot>
-      </div>
+      <slot name="source" />
     </div>
     <div
       ref="control"
       class="demo-block-control"
-      :class="{ 'is-fixed': fixedControl }"
       @click="isExpanded = !isExpanded"
     >
-      <transition name="arrow-slide">
-        <i :class="[iconClass, { 'hovering': hovering }]"></i>
+      <transition name="arrow-slide" mode="out-in">
+        <CaretUpOutlined v-if="isExpanded" class="icon" :class="{ 'hovering': hovering }" />
+        <CaretDownOutlined v-else class="icon" :class="{ 'hovering': hovering }" />
       </transition>
       <transition name="text-slide">
-        <span v-show="hovering">{{ controlText }}</span>
+        <span v-show="hovering" class="text">{{ controlText }}</span>
       </transition>
-      <el-tooltip effect="dark" :content="langConfig['tooltip-text']" placement="right">
-        <transition name="text-slide">
-          <el-button
-            v-show="hovering || isExpanded"
-            size="small"
-            type="text"
-            class="control-button"
-            @click.stop="goCodepen"
-          >
-            {{ langConfig['button-text'] }}
-          </el-button>
-        </transition>
-      </el-tooltip>
+    </div>
+    <div ref="meta" class="meta">
+      <div v-if="$slots.default" class="description">
+        <slot />
+      </div>
+      <div class="highlight">
+        <slot name="highlight" />
+      </div>
     </div>
   </div>
 </template>
@@ -48,8 +35,11 @@
 import { nextTick } from 'vue';
 import hljs from 'highlight.js';
 import { stripScript, stripStyle, stripTemplate } from '../util';
-
+import { CaretUpOutlined,CaretDownOutlined } from '@ant-design/icons-vue';
 export default {
+  components: {
+    CaretUpOutlined,CaretDownOutlined,
+  },
   data() {
     return {
       codepen: {
@@ -59,7 +49,6 @@ export default {
       },
       hovering: false,
       isExpanded: false,
-      fixedControl: false,
       scrollParent: null,
     };
   },
@@ -77,12 +66,8 @@ export default {
       return `demo-${ this.lang } demo-${ this.$router.currentRoute.value.path.split('/').pop() }`;
     },
 
-    iconClass() {
-      return this.isExpanded ? 'el-icon-caret-top' : 'el-icon-caret-bottom';
-    },
-
     controlText() {
-      return this.isExpanded ? this.langConfig['hide-text'] : this.langConfig['show-text'];
+      return this.isExpanded ? '隐藏代码' : '显示代码';
     },
 
     codeArea() {
@@ -101,17 +86,6 @@ export default {
   watch: {
     isExpanded(val) {
       this.codeArea.style.height = val ? `${ this.codeAreaHeight + 1 }px` : '0';
-      if (!val) {
-        this.fixedControl = false;
-        this.$refs.control.style.left = '0';
-        this.removeScrollHandler();
-        return;
-      }
-      setTimeout(() => {
-        this.scrollParent = document.querySelector('.page-component__scroll > .el-scrollbar__wrap');
-        this.scrollParent && this.scrollParent.addEventListener('scroll', this.scrollHandler);
-        this.scrollHandler();
-      }, 200);
     },
   },
 
@@ -149,60 +123,9 @@ export default {
       }
     });
   },
-
-  beforeUnmount() {
-    this.removeScrollHandler();
-  },
-
-  methods: {
-    goCodepen() {
-      // since 2.6.2 use code rather than jsfiddle https://blog.codepen.io/documentation/api/prefill/
-      const { script, html, style } = this.codepen;
-      const resourcesTpl = '<scr' + 'ipt src="//unpkg.com/vue@next"></scr' + 'ipt>' +
-        '\n<scr' + `ipt src="//unpkg.com/element-plus/lib/index.full.js"></scr` + 'ipt>';
-      let htmlTpl = `${resourcesTpl}\n<div id="app">\n${html.trim()}\n</div>`;
-      let cssTpl = `@import url("//unpkg.com/element-plus/lib/theme-chalk/index.css");\n${(style || '').trim()}\n`;
-      let jsTpl = script ? script.replace(/export default/, 'var Main =').trim().replace(/import ({.*}) from 'vue'/g, (s, s1) => `const ${s1} = Vue`) : 'var Main = {}';
-      jsTpl += '\n;const app = Vue.createApp(Main);\napp.use(ElementPlus);\napp.mount("#app")';
-      const data = {
-        js: jsTpl,
-        css: cssTpl,
-        html: htmlTpl,
-      };
-      const form = document.getElementById('fiddle-form') || document.createElement('form');
-      while (form.firstChild) {
-        form.removeChild(form.firstChild);
-      }
-      form.method = 'POST';
-      form.action = 'https://codepen.io/pen/define/';
-      form.target = '_blank';
-      form.style.display = 'none';
-
-      const input = document.createElement('input');
-      input.setAttribute('name', 'data');
-      input.setAttribute('type', 'hidden');
-      input.setAttribute('value', JSON.stringify(data));
-
-      form.appendChild(input);
-      document.body.appendChild(form);
-
-      form.submit();
-    },
-
-    scrollHandler() {
-      const { top, bottom, left } = this.$refs.meta.getBoundingClientRect();
-      this.fixedControl = bottom > document.documentElement.clientHeight &&
-          top + 44 <= document.documentElement.clientHeight;
-      this.$refs.control.style.left = this.fixedControl ? `${ left }px` : '0';
-    },
-
-    removeScrollHandler() {
-      this.scrollParent && this.scrollParent.removeEventListener('scroll', this.scrollHandler);
-    },
-  },
 };
 </script>
-<style lang="scss" scoped>
+<style lang="less" scoped>
   .demo-block {
     border: solid 1px #ebebeb;
     border-radius: 3px;
@@ -262,7 +185,7 @@ export default {
       }
     }
 
-    .highlight {
+    :deep .highlight {
       pre {
         margin: 0;
       }
@@ -298,7 +221,7 @@ export default {
         width: 868px;
       }
 
-      i {
+      .icon {
         font-size: 16px;
         line-height: 44px;
         transition: .3s;
@@ -307,7 +230,7 @@ export default {
         }
       }
 
-      > span {
+      > .text {
         position: absolute;
         transform: translateX(-30px);
         font-size: 14px;

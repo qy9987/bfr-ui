@@ -1,5 +1,5 @@
 <template>
-  <div class="table-settings">
+  <div class="bfr-table-settings">
     <RedoSetting v-if="getSetting.size" />
     <SizeSetting v-if="getSetting.redo" />
 
@@ -11,15 +11,17 @@
 <script lang="ts">
 import { defineComponent, PropType, computed } from 'vue';
 import type { TableSetting } from '../../types/table';
-import { createAsyncComponent } from '@bfr-ui/utils/factory/createAsyncComponent';
 import ColumnSetting from './ColumnSetting.vue';
+import SizeSetting from './SizeSetting.vue';
+import RedoSetting from './RedoSetting.vue';
+import FullScreenSetting from './FullScreenSetting.vue';
 export default defineComponent({
   name: 'TableSetting',
   components: {
     ColumnSetting,
-    SizeSetting: createAsyncComponent(() => import('./SizeSetting.vue')),
-    RedoSetting: createAsyncComponent(() => import('./RedoSetting.vue')),
-    FullScreenSetting: createAsyncComponent(() => import('./FullScreenSetting.vue')),
+    SizeSetting,
+    RedoSetting,
+    FullScreenSetting,
   },
   props: {
     setting: {
@@ -45,15 +47,3 @@ export default defineComponent({
   },
 });
 </script>
-<style lang="scss">
-.table-settings {
-    & > * {
-      margin-right: 12px;
-    }
-
-    svg {
-      width: 1.3em;
-      height: 1.3em;
-    }
-}
-</style>

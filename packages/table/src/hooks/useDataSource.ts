@@ -12,14 +12,14 @@ import { get } from 'lodash-es';
 import { FETCH_SETTING, ROW_KEY, PAGE_SIZE } from '../const';
 
 interface ActionType {
-  getPaginationInfo: ComputedRef<boolean | PaginationProps>;
+  paginationInfo: ComputedRef<boolean | PaginationProps>;
   setPagination: (info: Partial<PaginationProps>) => void;
   setLoading: (loading: boolean) => void;
   getFieldsValue: () => Recordable;
 }
 export function useDataSource(
   propsRef: ComputedRef<BasicTableProps>,
-  { getPaginationInfo, setPagination, setLoading, getFieldsValue }: ActionType,
+  { paginationInfo, setPagination, setLoading, getFieldsValue }: ActionType,
   emit: EmitType,
 ) {
   const dataSourceRef = ref<Recordable[]>([]);
@@ -28,7 +28,7 @@ export function useDataSource(
     const { dataSource, api } = unref(propsRef);
     !api && dataSource && (dataSourceRef.value = dataSource);
   });
-
+  // 设置行 key
   function setTableKey(items: any[]) {
     if (!items || !Array.isArray(items)) return;
     items.forEach(item => {
@@ -40,41 +40,44 @@ export function useDataSource(
       }
     });
   }
-
+  // 是否自动生成key
   const getAutoCreateKey = computed(() => {
     return unref(propsRef).autoCreateKey && !unref(propsRef).rowKey;
   });
-
+  // 获取table 行 rowKey 值
   const getRowKey = computed(() => {
     const { rowKey } = unref(propsRef);
     return unref(getAutoCreateKey) ? ROW_KEY : rowKey;
   });
-
+  // 获取数据源
   const getDataSourceRef = computed(() => {
     const dataSource = unref(dataSourceRef);
     if (!dataSource || dataSource.length === 0) {
       return [];
     }
     if (unref(getAutoCreateKey)) {
-      const firstItem = dataSource[0];
-      const lastItem = dataSource[dataSource.length - 1];
-
-      if (firstItem && lastItem) {
-        if (!firstItem[ROW_KEY] || !lastItem[ROW_KEY]) {
-          unref(dataSourceRef).forEach(item => {
-            if (!item[ROW_KEY]) {
-              item[ROW_KEY] = buildUUID();
-            }
-            if (item.children && item.children.length) {
-              setTableKey(item.children);
-            }
-          });
-        }
-      }
+      setTableKey(unref(dataSourceRef));
+      // const firstItem = dataSource[0];
+      // const lastItem = dataSource[dataSource.length - 1];
+      // // 判断数据真实性
+      // if (firstItem && lastItem) {
+      //   // rowkey不存在时
+      //   if (!firstItem[ROW_KEY] || !lastItem[ROW_KEY]) {
+      //     setTableKey(unref(dataSourceRef));
+      //     // unref(dataSourceRef).forEach(item => {
+      //     //   if (!item[ROW_KEY]) {
+      //     //     item[ROW_KEY] = buildUUID();
+      //     //   }
+      //     //   if (item.children && item.children.length) {
+      //     //     setTableKey(item.children);
+      //     //   }
+      //     // });
+      //   }
+      // }
     }
     return unref(dataSourceRef);
   });
-
+  // 获取异步数据
   async function fetch(opt?: FetchParams) {
     const { api, searchInfo, fetchSetting, beforeFetch, afterFetch, useSearchForm } = unref(
       propsRef,
@@ -82,12 +85,12 @@ export function useDataSource(
     if (!api || !isFunction(api)) return;
     try {
       setLoading(true);
-      const { pageField, sizeField, listField, totalField } = fetchSetting || FETCH_SETTING;
+      const { pageField, sizeField, listField, totalField } =Object.assign(FETCH_SETTING, fetchSetting?fetchSetting:{});
       let pageParams: Recordable = {};
 
-      const { current = 1, pageSize = PAGE_SIZE } = unref(getPaginationInfo) as PaginationProps;
+      const { current = 1, pageSize = PAGE_SIZE } = unref(paginationInfo) as PaginationProps;
 
-      if (isBoolean(getPaginationInfo)) {
+      if (isBoolean(paginationInfo)) {
         pageParams = {};
       } else {
         pageParams[pageField] = (opt && opt.page) || current;

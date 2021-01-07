@@ -42,12 +42,3 @@ export default defineComponent({
   },
 });
 </script>
-<style lang="less">
-  @prefix-cls: ~'bfr-basic-table-title';
-
-  .@{prefix-cls} {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-</style>

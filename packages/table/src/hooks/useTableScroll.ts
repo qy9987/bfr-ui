@@ -8,7 +8,6 @@ export function useTableScroll(
   columnsRef: ComputedRef<BasicColumn[]>,
   rowSelectionRef: ComputedRef<TableRowSelection<any> | null>,
 ) {
-  const tableHeightRef: Ref<Nullable<number>> = ref(null);
   const getScrollX = computed(() => {
     let width = 0;
     if (unref(rowSelectionRef)) {
@@ -33,14 +32,13 @@ export function useTableScroll(
   });
 
   const getScrollRef = computed(() => {
-    const tableHeight = unref(tableHeightRef);
-    const { canResize, scroll } = unref(propsRef);
+    const { scroll, maxHeight } = unref(propsRef);
 
     return {
       x: unref(getScrollX),
-      y: canResize ? tableHeight : null,
       scrollToFirstRowOnChange: false,
       ...scroll,
+      y: maxHeight ? maxHeight : null,
     };
   });
 

@@ -1,8 +1,11 @@
+
+import type { App } from 'vue';
 import BfrField from '@bfr-ui/field';
 import BfrTable from '@bfr-ui/table';
+import BfrScrollbar from '@bfr-ui/scrollbar';
+import BfrButton from '@bfr-ui/button';
 
-import { App } from 'vue';
-const components = [BfrField, BfrTable];
+const components = [BfrField, BfrTable, BfrScrollbar, BfrButton];
 const install = (app: App): void => {
   components.forEach(component => {
     app.component(component.name, component);
@@ -11,8 +14,11 @@ const install = (app: App): void => {
 export {
   BfrField,
   BfrTable,
+  BfrScrollbar,
+  BfrButton,
 };
 
-export default {
+const bfrui = {
   install,
 };
+export default bfrui;

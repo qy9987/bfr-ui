@@ -31,31 +31,30 @@ function handleChildren(children: BasicColumn[] | undefined, ellipsis: boolean) 
     handleChildren(children, ellipsis);
   });
 }
-
+// 序号列配置
 function handleIndexColumn(
   propsRef: ComputedRef<BasicTableProps>,
-  getPaginationRef: ComputedRef<boolean | PaginationProps>,
+  paginationRef: ComputedRef<boolean | PaginationProps>,
   columns: BasicColumn[],
 ) {
   const { showIndexColumn, indexColumnProps } = unref(propsRef);
-
-  let pushIndexColumns = false;
+  // 获取序号所在列index
+  const indIndex = columns.findIndex(column => column.flag === INDEX_COLUMN_FLAG);
+  let hasIndexColumn = false;
   columns.forEach(item => {
     const { children } = item;
 
     const isTreeTable = children && children.length;
-
-    const indIndex = columns.findIndex(column => column.flag === INDEX_COLUMN_FLAG);
-
+    // 展示序号列且table不为树形table，当序号列存在时，直接跳出
     if (showIndexColumn && !isTreeTable) {
-      pushIndexColumns = indIndex === -1;
+      hasIndexColumn = indIndex === -1;
+      // 不展示序号列且不为树形table，且序号列存在时，删除当前序号列
     } else if (!showIndexColumn && !isTreeTable && indIndex !== -1) {
       columns.splice(indIndex, 1);
     }
   });
-
-  if (!pushIndexColumns) return;
-
+  // 不存在
+  if (!hasIndexColumn) return;
   const isFixedLeft = columns.some(item => item.fixed === 'left');
 
   columns.unshift({
@@ -64,7 +63,7 @@ function handleIndexColumn(
     title: '序号',
     align: 'center',
     customRender: ({ index }) => {
-      const getPagination = unref(getPaginationRef);
+      const getPagination = unref(paginationRef);
       if (isBoolean(getPagination)) {
         return `${index + 1}`;
       }
@@ -80,13 +79,14 @@ function handleIndexColumn(
     ...indexColumnProps,
   });
 }
-
+// 操作列配置
 function handleActionColumn(propsRef: ComputedRef<BasicTableProps>, columns: BasicColumn[]) {
   const { actionColumn } = unref(propsRef);
   if (!actionColumn) return;
 
   const hasIndex = columns.findIndex(column => column.flag === ACTION_COLUMN_FLAG);
-  if (hasIndex === -1) {
+  // TODO hasIndex 判断商讨
+  if (hasIndex !== -1) {
     columns.push({
       ...columns[hasIndex],
       fixed: 'right',
@@ -98,7 +98,7 @@ function handleActionColumn(propsRef: ComputedRef<BasicTableProps>, columns: Bas
 
 export function useColumns(
   propsRef: ComputedRef<BasicTableProps>,
-  getPaginationRef: ComputedRef<boolean | PaginationProps>,
+  paginationRef: ComputedRef<boolean | PaginationProps>,
 ) {
   const columnsRef = (ref(unref(propsRef).columns) as unknown) as Ref<BasicColumn[]>;
   let cacheColumns = unref(propsRef).columns;
@@ -106,11 +106,12 @@ export function useColumns(
   const getColumnsRef = computed(() => {
     const columns = unref(columnsRef);
 
-    handleIndexColumn(propsRef, getPaginationRef, columns);
+    handleIndexColumn(propsRef, paginationRef, columns);
     handleActionColumn(propsRef, columns);
     if (!columns) {
       return [];
     }
+    // 是否展示省略号
     const { ellipsis } = unref(propsRef);
 
     columns.forEach(item => {
@@ -123,11 +124,11 @@ export function useColumns(
     });
     return columns;
   });
-
+  // 根据fixed进行列重排序
   const getSortFixedColumns = computed(() => {
     return useFixedColumn(unref(getColumnsRef));
   });
-
+  // 监听columns的修改，用于更新cacheColumns
   watchEffect(() => {
     const columns = toRaw(unref(propsRef).columns);
     columnsRef.value = columns;
@@ -135,7 +136,7 @@ export function useColumns(
   });
 
   /**
-   * set columns
+   * 设置表头数据
    * @param columnList key｜column
    */
   function setColumns(columnList: Partial<BasicColumn>[] | string[]) {
@@ -157,6 +158,7 @@ export function useColumns(
       const columnKeys = columns as string[];
       const newColumns: BasicColumn[] = [];
       cacheColumns.forEach(item => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         if (columnKeys.includes(`${item.key}`! || item.dataIndex!)) {
           newColumns.push({
             ...item,
@@ -164,7 +166,7 @@ export function useColumns(
           });
         }
       });
-      // Sort according to another array
+      // 根据dataIndex排序
       if (!isEqual(cacheKeys, columns)) {
         newColumns.sort((prev, next) => {
           return (
@@ -201,9 +203,9 @@ export function useColumns(
 }
 
 export function useFixedColumn(columns: BasicColumn[]) {
-  const fixedLeftColumns: BasicColumn[] = [];
-  const fixedRightColumns: BasicColumn[] = [];
-  const defColumns: BasicColumn[] = [];
+  const fixedLeftColumns: BasicColumn[] = []; //左排列
+  const fixedRightColumns: BasicColumn[] = [];// 右排列
+  const defColumns: BasicColumn[] = []; // 正常列
   for (const column of columns) {
     if (column.fixed === 'left') {
       fixedLeftColumns.push(column);

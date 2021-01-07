@@ -1,11 +1,10 @@
 import { App } from 'vue';
 import Table from './src/index.vue';
-import { createAsyncComponent } from '@bfr-ui/utils/factory/createAsyncComponent';
-export { default as BasicTable } from './src/index.vue';
-export { default as TableAction } from './src/components/TableAction.vue';
+// import { createAsyncComponent } from '@bfr-ui/utils/factory/createAsyncComponent';
+// export { default as TableAction } from './src/components/TableAction.vue';
 // export { default as EditTableHeaderIcon } from './src/components/EditTableHeaderIcon.vue';
 
-export const TableImg = createAsyncComponent(() => import('./src/components/TableImg.vue'));
+export { default as TableImg }   from './src/components/TableImg.vue';
 
 export * from './src/types/table';
 export * from './src/types/pagination';

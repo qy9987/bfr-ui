@@ -1,8 +1,8 @@
 import { createApp } from 'vue';
-// import ElementPlus from 'element-plus';
+import BfrUI from 'bfr-ui';
 import App from './play/index.vue';
-// import '../packages/theme-chalk/src/index.scss';
+import '../packages/theme-chalk/src/index.scss';
 const app = createApp(App);
-// app.use(ElementPlus);
+app.use(BfrUI);
 app.mount('#app');
 
