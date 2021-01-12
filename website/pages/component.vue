@@ -7,7 +7,16 @@
       <div class="content-wrap">
         <router-view class="content" />
       </div>
-      <!-- <footer-nav /> -->
+      <bfr-scrollbar class="content-anchor">
+        <a-anchor style="padding-left:10px" :get-container="getAnchorContainer">
+          <a-anchor-link
+            v-for="i in anchors"
+            :key="i.href"
+            :href="i.href"
+            :title="i.title"
+          />
+        </a-anchor>
+      </bfr-scrollbar>
     </div>
   </div>
 </template>
@@ -20,11 +29,8 @@ export default {
     setTimeout(() => {
       const toPath = to.path;
       const fromPath = from.path;
-      if (toPath === fromPath && to.hash) {
-        this.goAnchor();
-      }
       if (toPath !== fromPath) {
-        document.documentElement.scrollTop = document.body.scrollTop = 0;
+        // document.documentElement.scrollTop = document.body.scrollTop = 0;
         this.renderAnchorHref();
       }
     }, 500);
@@ -34,6 +40,7 @@ export default {
       navsData,
       scrollTop: 0,
       showHeader: true,
+      anchors: [],
     };
   },
   computed: {
@@ -43,11 +50,10 @@ export default {
   },
   watch: {
     '$route.path'() {
-      // // 触发伪滚动条更新
-      // this.$nextTick(() => {
-      //   this.renderAnchorHref();
-      //   this.goAnchor();
-      // });
+      this.anchors = [];
+      setTimeout(()=>{
+        this.renderAnchorHref();
+      },500);
     },
   },
   mounted() {
@@ -61,13 +67,20 @@ export default {
   },
 
   methods: {
+    getAnchorContainer() {
+      return document.querySelector('.main-cnt__wrap');
+    },
     renderAnchorHref() {
       const anchors = document.querySelector('.content-wrap').querySelectorAll('h2 a,h3 a,h4 a,h5 a,a');
       const basePath = location.href.split('#').splice(0, 2).join('#');
       [].slice.call(anchors).forEach(a => {
         const href = a.getAttribute('href');
+
         if(['H2','H3','H4','H5'].includes(a.parentElement.nodeName) || (href||'').substr(0,1)==='#' ) {
           a.href = basePath + href;
+          if(['H3','H4','H5'].includes(a.parentElement.nodeName)) {
+            this.anchors.push({ title: a.parentElement.innerText.substr(2), href: a.href });
+          }
         }
       });
     },
@@ -96,6 +109,7 @@ export default {
     position: fixed;
     top: 60px;
     bottom: 0;
+    padding-left: 20px;
     transition: padding-top .3s;
 
     :deep > .el-scrollbar__wrap {
@@ -125,6 +139,15 @@ export default {
   }
   .content-wrap {
     min-height: 500px;
+    margin-right: 240px;
+  }
+  .content-anchor {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    bottom: 20px;
+    width: 200px;
+    height: calc(100vh - 100px);
   }
 
   .content {

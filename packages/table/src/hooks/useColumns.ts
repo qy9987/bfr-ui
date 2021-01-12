@@ -1,9 +1,10 @@
 import { BasicColumn, BasicTableProps, GetColumnsParams } from '../types/table';
 import { PaginationProps } from '../types/pagination';
-import { unref, ComputedRef, Ref, computed, watchEffect, ref, toRaw } from 'vue';
+import { unref, ComputedRef, Ref, computed, ref, toRaw, watch } from 'vue';
 import { isBoolean, isArray, isString } from '@bfr-ui/utils/is';
 import { DEFAULT_ALIGN, PAGE_SIZE, INDEX_COLUMN_FLAG, ACTION_COLUMN_FLAG } from '../const';
-import { isEqual, cloneDeep } from 'lodash-es';
+import { isEqual, cloneDeep } from 'lodash';
+import { formatter } from '@bfr-ui/utils/date';
 
 function handleItem(item: BasicColumn, ellipsis: boolean) {
   const { key, dataIndex, children } = item;
@@ -18,6 +19,7 @@ function handleItem(item: BasicColumn, ellipsis: boolean) {
       });
     }
   }
+
   if (children && children.length) {
     handleChildren(children, !!ellipsis);
   }
@@ -37,62 +39,58 @@ function handleIndexColumn(
   paginationRef: ComputedRef<boolean | PaginationProps>,
   columns: BasicColumn[],
 ) {
-  const { showIndexColumn, indexColumnProps } = unref(propsRef);
-  // 获取序号所在列index
-  const indIndex = columns.findIndex(column => column.flag === INDEX_COLUMN_FLAG);
-  let hasIndexColumn = false;
-  columns.forEach(item => {
-    const { children } = item;
+  const { showIndexColumn } = unref(propsRef);
 
-    const isTreeTable = children && children.length;
-    // 展示序号列且table不为树形table，当序号列存在时，直接跳出
-    if (showIndexColumn && !isTreeTable) {
-      hasIndexColumn = indIndex === -1;
-      // 不展示序号列且不为树形table，且序号列存在时，删除当前序号列
-    } else if (!showIndexColumn && !isTreeTable && indIndex !== -1) {
-      columns.splice(indIndex, 1);
+  const index = columns.findIndex(column => column.flag === INDEX_COLUMN_FLAG);
+  if (showIndexColumn) {
+    const isFixedLeft = columns.some(item => item.fixed === 'left');
+    const column: BasicColumn = {
+      flag: INDEX_COLUMN_FLAG,
+      width: 50,
+      title: '序号',
+      dataIndex: '$index',
+      key: '$index',
+      align: 'center',
+      customRender: ({ index }) => {
+        const getPagination = unref(paginationRef);
+        if (isBoolean(getPagination)) {
+          return `${index + 1}`;
+        }
+        const { current = 1, pageSize = PAGE_SIZE } = getPagination;
+        const currentIndex = (current - 1) * pageSize + index + 1;
+        return currentIndex;
+      },
+      ...(isFixedLeft
+        ? {
+          fixed: 'left',
+        }
+        : {}),
+      ...index!==-1?columns[index]:{},
+    };
+    if (index === -1) {
+      columns.unshift(column);
+    } else {
+      columns[index] = column;
     }
-  });
-  // 不存在
-  if (!hasIndexColumn) return;
-  const isFixedLeft = columns.some(item => item.fixed === 'left');
-
-  columns.unshift({
-    flag: INDEX_COLUMN_FLAG,
-    width: 50,
-    title: '序号',
-    align: 'center',
-    customRender: ({ index }) => {
-      const getPagination = unref(paginationRef);
-      if (isBoolean(getPagination)) {
-        return `${index + 1}`;
-      }
-      const { current = 1, pageSize = PAGE_SIZE } = getPagination;
-      const currentIndex = (current - 1) * pageSize + index + 1;
-      return currentIndex;
-    },
-    ...(isFixedLeft
-      ? {
-        fixed: 'left',
-      }
-      : {}),
-    ...indexColumnProps,
-  });
+  } else {
+    if (index !== -1) {
+      columns.splice(index,1);
+    }
+  }
 }
 // 操作列配置
-function handleActionColumn(propsRef: ComputedRef<BasicTableProps>, columns: BasicColumn[]) {
-  const { actionColumn } = unref(propsRef);
-  if (!actionColumn) return;
-
+function handleActionColumn( columns: BasicColumn[]) {
   const hasIndex = columns.findIndex(column => column.flag === ACTION_COLUMN_FLAG);
-  // TODO hasIndex 判断商讨
   if (hasIndex !== -1) {
-    columns.push({
+    const isFixedRight = columns.some(item => item.fixed === 'right');
+    columns[hasIndex] = {
+      fixed: isFixedRight?'right':false,
+      key: '$action',
+      dataIndex: '$action',
       ...columns[hasIndex],
-      fixed: 'right',
-      ...actionColumn,
+      width: 200,
       flag: ACTION_COLUMN_FLAG,
-    });
+    };
   }
 }
 
@@ -101,13 +99,17 @@ export function useColumns(
   paginationRef: ComputedRef<boolean | PaginationProps>,
 ) {
   const columnsRef = (ref(unref(propsRef).columns) as unknown) as Ref<BasicColumn[]>;
+  // 监听序号列展示
+  watch([()=>propsRef.value.showIndexColumn], () => {
+    handleIndexColumn(propsRef, paginationRef, unref(columnsRef));
+  }, { immediate: true });
+  // 监听操作列展示
+  watch([()=>propsRef.value.columns], () => {
+    handleActionColumn(unref(columnsRef));
+  }, { immediate: true });
   let cacheColumns = unref(propsRef).columns;
-
   const getColumnsRef = computed(() => {
     const columns = unref(columnsRef);
-
-    handleIndexColumn(propsRef, paginationRef, columns);
-    handleActionColumn(propsRef, columns);
     if (!columns) {
       return [];
     }
@@ -115,8 +117,29 @@ export function useColumns(
     const { ellipsis } = unref(propsRef);
 
     columns.forEach(item => {
-      const { customRender, slots } = item;
-
+      const { flag, customRender, slots } = item;
+      if (!customRender&&(!slots||(slots&&!slots.customRender))) {
+        if (flag == 'datetime') {
+          item.customRender = ({ text }) => {
+            return formatter(text, item.dateTemplate||'YYYY-MM-DD HH:mm:ss' );
+          };
+        } else if (flag == 'date') {
+          item.customRender = ({ text }) => {
+            return formatter(text, item.dateTemplate||'YYYY-MM-DD' );
+          };
+        } else if (flag == 'percent') {
+          const percent = item.percent;
+          let realPercent = 100;
+          if (typeof percent == 'number') {
+            realPercent = percent;
+          } else if (percent instanceof Function) {
+            realPercent = percent();
+          }
+          item.customRender = ({ text }) => {
+            return (text*100/realPercent) +'%';
+          };
+        }
+      }
       handleItem(
         item,
         Reflect.has(item, 'ellipsis') ? !!item.ellipsis : !!ellipsis && !customRender && !slots,
@@ -129,11 +152,13 @@ export function useColumns(
     return useFixedColumn(unref(getColumnsRef));
   });
   // 监听columns的修改，用于更新cacheColumns
-  watchEffect(() => {
-    const columns = toRaw(unref(propsRef).columns);
-    columnsRef.value = columns;
-    cacheColumns = columns?.filter(item => !item.flag) ?? [];
-  });
+  watch(
+    () => unref(propsRef).columns,
+    columns => {
+      columnsRef.value = columns;
+      cacheColumns = columns?.filter(item => !item.flag) ?? [];
+    },
+  );
 
   /**
    * 设置表头数据
@@ -150,31 +175,20 @@ export function useColumns(
 
     const firstColumn = columns[0];
 
-    const cacheKeys = cacheColumns.map(item => item.dataIndex);
-
     if (!isString(firstColumn)) {
       columnsRef.value = columns as BasicColumn[];
     } else {
       const columnKeys = columns as string[];
       const newColumns: BasicColumn[] = [];
       cacheColumns.forEach(item => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        if (columnKeys.includes(`${item.key}`! || item.dataIndex!)) {
-          newColumns.push({
+        const index =  columnKeys.indexOf(`${item.dataIndex||item.key}`);
+        if ( index !== -1 ) {
+          newColumns[index] = {
             ...item,
             defaultHidden: false,
-          });
+          };
         }
       });
-      // 根据dataIndex排序
-      if (!isEqual(cacheKeys, columns)) {
-        newColumns.sort((prev, next) => {
-          return (
-            columnKeys.indexOf(prev.dataIndex as string) -
-            columnKeys.indexOf(next.dataIndex as string)
-          );
-        });
-      }
       columnsRef.value = newColumns;
     }
   }
@@ -220,6 +234,5 @@ export function useFixedColumn(columns: BasicColumn[]) {
   const resultColumns = [...fixedLeftColumns, ...defColumns, ...fixedRightColumns].filter(
     item => !item.defaultHidden,
   );
-
   return resultColumns;
 }

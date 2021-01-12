@@ -13,8 +13,7 @@ export function createAsyncComponent(loader: Fn, options: Options = {}) {
   const { size = 'small', delay = 100, timeout = 30000, loading = false, retry = true } = options;
   return defineAsyncComponent({
     loader,
-    // <Spin spinning={true} size={size} />
-    loadingComponent: loading ? Spin : undefined,
+    loadingComponent: loading ? { template:`<Spin :spinning="true" size="${size}"  />`, components:{ Spin } } : undefined,
     timeout,
     delay,
     onError: !retry

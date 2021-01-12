@@ -1,7 +1,12 @@
 <template>
   <div id="app" class="is-component">
     <main-header />
-    <bfr-scrollbar ref="scroll" class="main-cnt" @scroll="handlerScroll">
+    <bfr-scrollbar
+      ref="scroll"
+      class="main-cnt"
+      wrap-class="main-cnt__wrap"
+      @scroll="handlerScroll"
+    >
       <router-view />
     </bfr-scrollbar>
     <a-back-top
@@ -26,16 +31,19 @@ export default defineComponent({
     };
   },
   watch: {
-    '$route'() {
-      setTimeout(() => {
-        this.goAnchor();
-      }, 500);
+    '$route'(newval, oldval) {
+      if(newval.path!==oldval.path){
+        setTimeout(() => {
+          this.goAnchor();
+        }, 500);
+      }
     },
   },
   mounted() {
     this.$nextTick(()=>{
       setTimeout(()=>{
         this.goAnchor();
+
       }, 500);
     });
   },
@@ -47,7 +55,7 @@ export default defineComponent({
         const elm = document.querySelector(anchor[0]);
         if (!elm) return;
         setTimeout(() => {
-          this.$refs.scroll.scrollToY((elm as HTMLElement).offsetTop - 80);
+          this.$refs.scroll.scrollToY((elm as HTMLElement).offsetTop - 60);
         }, 50);
       }
     },

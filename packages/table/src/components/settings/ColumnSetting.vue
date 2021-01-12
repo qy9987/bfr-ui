@@ -20,17 +20,9 @@
             列展示
           </Checkbox>
 
-          <Checkbox v-model:checked="checkIndex" @change="handleIndexCheckChange">
+          <!-- <Checkbox v-model:checked="checkIndex" @change="handleIndexCheckChange">
             序号列
-          </Checkbox>
-
-          <Checkbox
-            v-model:checked="checkSelect"
-            :disabled="!defaultRowSelection"
-            @change="handleSelectCheckChange"
-          >
-            勾选列
-          </Checkbox>
+          </Checkbox> -->
 
           <a-button size="small" type="link" @click="reset">
             重置
@@ -45,36 +37,35 @@
               <div :class="`${prefixCls}__check-item`">
                 <DragOutlined class="table-coulmn-drag-icon" />
                 <Checkbox :value="item.value"> {{ item.label }} </Checkbox>
-
-                <Tooltip placement="bottomLeft" :mouse-leave-delay="0.4">
-                  <template #title> 固定到左侧</template>
-                  <i
-                    icon="line-md:arrow-align-left"
-                    :class="[
-                      `${prefixCls}__fixed-left`,
-                      {
-                        active: item.fixed === 'left',
-                        disabled: !checkedList.includes(item.value),
-                      },
-                    ]"
-                    @click="handleColumnFixed(item, 'left')"
-                  />
-                </Tooltip>
-                <Divider type="vertical" />
-                <Tooltip placement="bottomLeft" :mouse-leave-delay="0.4">
-                  <template #title>固定到右侧</template>
-                  <i
-                    icon="line-md:arrow-align-left"
-                    :class="[
-                      `${prefixCls}__fixed-right`,
-                      {
-                        active: item.fixed === 'right',
-                        disabled: !checkedList.includes(item.value),
-                      },
-                    ]"
-                    @click="handleColumnFixed(item, 'right')"
-                  />
-                </Tooltip>
+                <template v-if="showFixed">
+                  <Tooltip placement="bottomLeft" :mouse-leave-delay="0.4">
+                    <template #title> 固定到左侧</template>
+                    <ArrowLeftOutlined
+                      :class="[
+                        `${prefixCls}__fixed-left`,
+                        {
+                          active: item.fixed === 'left',
+                          disabled: !checkedList.includes(item.value),
+                        },
+                      ]"
+                      @click="handleColumnFixed(item, 'left')"
+                    />
+                  </Tooltip>
+                  <Divider type="vertical" />
+                  <Tooltip placement="bottomLeft" :mouse-leave-delay="0.4">
+                    <template #title>固定到右侧</template>
+                    <ArrowRightOutlined
+                      :class="[
+                        `${prefixCls}__fixed-right`,
+                        {
+                          active: item.fixed === 'right',
+                          disabled: !checkedList.includes(item.value),
+                        },
+                      ]"
+                      @click="handleColumnFixed(item, 'right')"
+                    />
+                  </Tooltip>
+                </template>
               </div>
             </template>
           </CheckboxGroup>
@@ -96,7 +87,7 @@ import {
   computed,
 } from 'vue';
 import { Tooltip, Popover, Checkbox, Divider } from 'ant-design-vue';
-import { SettingOutlined, DragOutlined } from '@ant-design/icons-vue';
+import { SettingOutlined, DragOutlined,ArrowLeftOutlined, ArrowRightOutlined  } from '@ant-design/icons-vue';
 import { ScrollContainer } from '@bfr-ui/container';
 
 import { useTableContext } from '../../hooks/useTableContext';
@@ -106,6 +97,7 @@ import { isNullAndUnDef } from '@bfr-ui/utils/is';
 import { getPopupContainer } from '@bfr-ui/utils';
 
 import type { BasicColumn, BasicTableProps } from '../../types/table';
+import { propTypes } from '@bfr-ui/utils/propTypes';
 
   interface State {
     indeterminate: boolean;
@@ -133,12 +125,15 @@ export default defineComponent({
     DragOutlined,
     ScrollContainer,
     Divider,
+    ArrowLeftOutlined,
+    ArrowRightOutlined,
   },
-
+  props: {
+    showFixed: propTypes.bool.def(false),
+  },
   setup() {
     const table = useTableContext();
 
-    const defaultRowSelection = table.getRowSelection();
     let inited = false;
 
     const cachePlainOptions = ref<Options[]>([]);
@@ -147,7 +142,6 @@ export default defineComponent({
     const plainSortOptions = ref<Options[]>([]);
 
     const columnListRef = ref<ComponentRef>(null);
-
     const state = reactive<State>({
       indeterminate: false,
       checkAll: true,
@@ -156,7 +150,6 @@ export default defineComponent({
     });
 
     const checkIndex = ref(false);
-    const checkSelect = ref(false);
 
     const prefixCls = 'bfr-column-setting';
 
@@ -171,15 +164,26 @@ export default defineComponent({
       }
     });
 
+
     watchEffect(() => {
       const values = unref(getValues) as BasicTableProps<any>;
       checkIndex.value = !!values.showIndexColumn;
-      checkSelect.value = !!values.rowSelection;
     });
 
     function getColumns() {
       const ret: Options[] = [];
-      table.getColumns({ ignoreIndex: true, ignoreAction: true }).forEach(item => {
+      table.getColumns().forEach(item => {
+        ret.push({
+          label: item.title as string,
+          value: (item.dataIndex || item.title) as string,
+          ...item,
+        });
+      });
+      return ret;
+    }
+    function getCacheColumns() {
+      const ret: Options[] = [];
+      table.getCacheColumns().forEach(item => {
         ret.push({
           label: item.title as string,
           value: (item.dataIndex || item.title) as string,
@@ -190,8 +194,7 @@ export default defineComponent({
     }
 
     function init() {
-      const columns = getColumns();
-
+      const columns = getCacheColumns();
       const checkList = table
         .getColumns()
         .map(item => {
@@ -208,16 +211,20 @@ export default defineComponent({
         cachePlainOptions.value = columns;
         state.defaultCheckList = checkList;
       } else {
-        const fixedColumns = columns.filter(item =>
-          Reflect.has(item, 'fixed'),
-        ) as BasicColumn[];
-
-        unref(plainOptions).forEach((item: BasicColumn) => {
-          const findItem = fixedColumns.find(fCol => fCol.dataIndex === item.dataIndex);
+        const unrefOpt = unref(plainOptions);
+        columns.forEach((item: BasicColumn) => {
+          const findItem = unrefOpt.find((col: BasicColumn) => col.dataIndex === item.dataIndex);
           if (findItem) {
             item.fixed = findItem.fixed;
           }
         });
+        plainOptions.value = columns;
+        // unref(plainOptions).forEach((item: BasicColumn) => {
+        //   const findItem = columns.find((col: BasicColumn) => col.dataIndex === item.dataIndex);
+        //   if (findItem) {
+        //     item.fixed = findItem.fixed;
+        //   }
+        // });
       }
 
       state.checkedList = checkList;
@@ -258,7 +265,6 @@ export default defineComponent({
       plainSortOptions.value = unref(cachePlainOptions);
       table.setColumns(table.getCacheColumns());
     }
-
     // Open the pop-up window for drag and drop initialization
     function handleVisibleChange() {
       if (inited) return;
@@ -277,15 +283,8 @@ export default defineComponent({
             }
             // Sort column
             const columns = getColumns();
-
-            if (oldIndex > newIndex) {
-              columns.splice(newIndex, 0, columns[oldIndex]);
-              columns.splice(oldIndex + 1, 1);
-            } else {
-              columns.splice(newIndex + 1, 0, columns[oldIndex]);
-              columns.splice(oldIndex, 1);
-            }
-
+            const [old] = columns.splice(oldIndex, 1);
+            columns.splice(newIndex, 0, old);
             plainSortOptions.value = columns;
             plainOptions.value = columns;
             table.setColumns(columns);
@@ -303,12 +302,6 @@ export default defineComponent({
       });
     }
 
-    // Control whether the check box is displayed
-    function handleSelectCheckChange(e: ChangeEvent) {
-      table.setProps({
-        rowSelection: e.target.checked ? defaultRowSelection : undefined,
-      });
-    }
 
     function handleColumnFixed(item: BasicColumn, fixed?: 'left' | 'right') {
       if (!state.checkedList.includes(item.dataIndex as string)) return;
@@ -320,11 +313,12 @@ export default defineComponent({
         columns[index].fixed = isFixed;
       }
       item.fixed = isFixed;
-
       if (isFixed && !item.width) {
         item.width = 100;
+        if(index !== -1) {
+          columns[index].width = 100;
+        }
       }
-
       table.setColumns(columns);
     }
 
@@ -338,10 +332,7 @@ export default defineComponent({
       columnListRef,
       handleVisibleChange,
       checkIndex,
-      checkSelect,
       handleIndexCheckChange,
-      handleSelectCheckChange,
-      defaultRowSelection,
       handleColumnFixed,
       getPopupContainer,
     };

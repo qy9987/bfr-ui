@@ -5,7 +5,7 @@ import Table from './src/index.vue';
 // export { default as EditTableHeaderIcon } from './src/components/EditTableHeaderIcon.vue';
 
 export { default as TableImg }   from './src/components/TableImg.vue';
-
+export { setGolbalFetchSetting } from './src/const';
 export * from './src/types/table';
 export * from './src/types/pagination';
 export * from './src/types/tableAction';

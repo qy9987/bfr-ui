@@ -3,7 +3,7 @@
     <RedoSetting v-if="getSetting.size" />
     <SizeSetting v-if="getSetting.redo" />
 
-    <ColumnSetting v-if="getSetting.setting" />
+    <ColumnSetting v-if="getSetting.setting" :show-fixed="getSetting.allowFixed" />
 
     <FullScreenSetting v-if="getSetting.fullScreen" />
   </div>

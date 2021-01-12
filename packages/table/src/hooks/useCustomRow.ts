@@ -38,8 +38,8 @@ export function useCustomRow(
       onClick: (e: Event) => {
         emit('row-click', record, index, e);
         e?.stopPropagation();
-        const { rowSelection, rowKey, clickToRowSelect } = unref(propsRef);
-        if (!rowSelection || !clickToRowSelect) return;
+        const { rowSelection, rowKey } = unref(propsRef);
+        if (!rowSelection) return;
         const keys = getSelectRowKeys();
         const key = getKey(record, rowKey, unref(getAutoCreateKey));
         if (!key) return;

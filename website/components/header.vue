@@ -28,10 +28,6 @@
               组件
             </router-link>
           </li>
-          <!-- gap -->
-          <li v-show="isComponentPage" class="nav-item">
-            <div class="nav-gap" />
-          </li>
         </ul>
       </div>
     </header>

@@ -18,6 +18,7 @@ module.exports = {
     '@babel/proposal-class-properties',
     '@babel/transform-runtime',
     'lodash',
+    // 'transform-es2015-modules-commonjs',
   ],
   overrides: [
     {

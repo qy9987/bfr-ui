@@ -17,6 +17,7 @@ import antd from 'ant-design-vue';
 import 'ant-design-vue/dist/antd.css';
 import { SearchOutlined } from '@ant-design/icons-vue';
 import '../packages/theme/src/index.less';
+import { setGolbalFetchSetting } from '@bfr-ui/table';
 
 const app = createApp(App);
 
@@ -35,6 +36,7 @@ const router = createRouter({
 
 app.use(antd);
 app.use(bfrui);
+setGolbalFetchSetting({ listField:'data' });
 app.use(router);
 app.component(SearchOutlined.name, SearchOutlined);
 

@@ -4,7 +4,6 @@
     :class="[
       prefixCls,
       {
-        [`${prefixCls}-form-container`]: getBindValues.useSearchForm,
         [`${prefixCls}--inset`]: getBindValues.inset,
         'bfr-table__noscroll': noScroll
       },
@@ -18,7 +17,7 @@
       @change="handleTableChange"
     >
       <template v-for="item in Object.keys($slots)" #[item]="data">
-        <slot :name="item" v-bind="data" />
+        <slot v-if="item!=='footer'" :name="item" v-bind="data" />
       </template>
     </Table>
   </div>
@@ -32,7 +31,7 @@ import { Table } from 'ant-design-vue';
 
 import { isFunction } from '@bfr-ui/utils/is';
 
-import { omit } from 'lodash-es';
+import { omit } from 'lodash';
 
 import { usePagination } from './hooks/usePagination';
 import { useColumns } from './hooks/useColumns';
@@ -103,7 +102,6 @@ export default defineComponent({
         paginationInfo,
         setLoading,
         setPagination,
-        getFieldsValue:() =>({}), //formActions.getFieldsValue,
       },
       emit,
     );
@@ -146,7 +144,6 @@ export default defineComponent({
       tableElRef,
       getDataSourceRef,
     );
-
     // ant 表格绑定 attrs
     const getBindValues = computed(() => {
       let propsData: Recordable = {
@@ -172,16 +169,16 @@ export default defineComponent({
     });
     // 空数据时展示表格
     const getEmptyDataIsShowTable = computed(() => {
-      const { emptyDataIsShowTable, useSearchForm } = unref(realProps);
-      if (emptyDataIsShowTable || !useSearchForm) {
+      const { showTableInEmpty } = unref(realProps);
+      if (showTableInEmpty) {
         return true;
       }
       return !!unref(getDataSourceRef).length;
     });
-    // 表格数据change时触发事件
+    // 表格分页、排序、筛选变化时触发
     function handleTableChange(
       pagination: PaginationProps,
-      filters: Partial<Recordable<string[]>>,
+      filterInfo: Partial<Recordable<string[]>>,
       sorter: SorterResult,
     ) {
       const { clearSelectOnPageChange, sortFn } = unref(realProps);
@@ -192,10 +189,10 @@ export default defineComponent({
 
       if (sorter && isFunction(sortFn)) {
         const sortInfo = sortFn(sorter);
-        fetch({ sortInfo });
+        fetch({ sortInfo, filterInfo });
         return;
       }
-      fetch();
+      fetch({ filterInfo });
     }
 
     function setProps(props: Partial<BasicTableProps>) {

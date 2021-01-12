@@ -7,7 +7,7 @@ import { useTimeout } from '@bfr-ui/hooks/core/useTimeout';
 
 import { buildUUID } from '@bfr-ui/utils/uuid';
 import { isFunction, isBoolean } from '@bfr-ui/utils/is';
-import { get } from 'lodash-es';
+import { cloneDeep, get } from 'lodash';
 
 import { FETCH_SETTING, ROW_KEY, PAGE_SIZE } from '../const';
 
@@ -15,11 +15,10 @@ interface ActionType {
   paginationInfo: ComputedRef<boolean | PaginationProps>;
   setPagination: (info: Partial<PaginationProps>) => void;
   setLoading: (loading: boolean) => void;
-  getFieldsValue: () => Recordable;
 }
 export function useDataSource(
   propsRef: ComputedRef<BasicTableProps>,
-  { paginationInfo, setPagination, setLoading, getFieldsValue }: ActionType,
+  { paginationInfo, setPagination, setLoading }: ActionType,
   emit: EmitType,
 ) {
   const dataSourceRef = ref<Recordable[]>([]);
@@ -29,16 +28,18 @@ export function useDataSource(
     !api && dataSource && (dataSourceRef.value = dataSource);
   });
   // 设置行 key
-  function setTableKey(items: any[]) {
+  function setTableKey(originitems: any[]) {
+    const items = cloneDeep(originitems);
     if (!items || !Array.isArray(items)) return;
     items.forEach(item => {
       if (!item[ROW_KEY]) {
         item[ROW_KEY] = buildUUID();
       }
       if (item.children && item.children.length) {
-        setTableKey(item.children);
+        item.children = setTableKey(item.children);
       }
     });
+    return items;
   }
   // 是否自动生成key
   const getAutoCreateKey = computed(() => {
@@ -56,30 +57,13 @@ export function useDataSource(
       return [];
     }
     if (unref(getAutoCreateKey)) {
-      setTableKey(unref(dataSourceRef));
-      // const firstItem = dataSource[0];
-      // const lastItem = dataSource[dataSource.length - 1];
-      // // 判断数据真实性
-      // if (firstItem && lastItem) {
-      //   // rowkey不存在时
-      //   if (!firstItem[ROW_KEY] || !lastItem[ROW_KEY]) {
-      //     setTableKey(unref(dataSourceRef));
-      //     // unref(dataSourceRef).forEach(item => {
-      //     //   if (!item[ROW_KEY]) {
-      //     //     item[ROW_KEY] = buildUUID();
-      //     //   }
-      //     //   if (item.children && item.children.length) {
-      //     //     setTableKey(item.children);
-      //     //   }
-      //     // });
-      //   }
-      // }
+      dataSourceRef.value = setTableKey(unref(dataSourceRef));
     }
     return unref(dataSourceRef);
   });
   // 获取异步数据
   async function fetch(opt?: FetchParams) {
-    const { api, searchInfo, fetchSetting, beforeFetch, afterFetch, useSearchForm } = unref(
+    const { api, searchInfo, fetchSetting, beforeFetch, afterFetch } = unref(
       propsRef,
     );
     if (!api || !isFunction(api)) return;
@@ -99,7 +83,6 @@ export function useDataSource(
 
       let params: Recordable = {
         ...pageParams,
-        ...(useSearchForm ? getFieldsValue() : {}),
         ...searchInfo,
         ...(opt ? opt.searchInfo : {}),
         ...(opt ? opt.sortInfo : {}),

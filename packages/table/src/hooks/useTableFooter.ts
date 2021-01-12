@@ -1,9 +1,33 @@
-import type { ComputedRef, Ref } from 'vue';
-import type { BasicTableProps } from '../types/table';
+import { ComputedRef, Ref } from 'vue';
+import type {  BasicColumn, BasicTableProps } from '../types/table';
 import { unref, computed, h, nextTick, watchEffect } from 'vue';
 import TableFooter from '../components/TableFooter.vue';
 import { useEventListener } from '@bfr-ui/hooks/event/useEventListener';
-
+import { ACTION_COLUMN_FLAG, INDEX_COLUMN_FLAG } from '../const';
+export function defaultSummaryMethod (dataSources: Recordable[], columns: BasicColumn[]):Array<string|number> {
+  const data = [];
+  columns.forEach((column, index) => {
+    if([INDEX_COLUMN_FLAG, ACTION_COLUMN_FLAG].includes(column.flag)){
+      data[index] = '';
+      return;
+    }
+    const values = dataSources.map(item => Number(item[column.dataIndex]));
+    // 判断当前列数据是否都不是NaN
+    if (!values.every(value => isNaN(value))) {
+      data[index] = values.reduce((prev, curr) => {
+        const value = Number(curr);
+        if (!isNaN(value)) {
+          return prev + curr;
+        } else {
+          return prev;
+        }
+      }, 0);
+    }else {
+      data[index] = '';
+    }
+  });
+  return data;
+}
 export function useTableFooter(
   propsRef: ComputedRef<BasicTableProps>,
   scrollRef: ComputedRef<{
@@ -17,11 +41,12 @@ export function useTableFooter(
   const getIsEmptyData = computed(() => {
     return (unref(getDataSourceRef) || []).length === 0;
   });
-
   const getFooterProps = computed((): Recordable | undefined => {
-    const { summaryFunc, showSummary } = unref(propsRef);
+    const { summaryMethod, showSummary, summaryText } = unref(propsRef);
     return showSummary && !unref(getIsEmptyData)
-      ? () => h(TableFooter, { summaryFunc, scroll: unref(scrollRef) })
+      ? data => {
+        return h(TableFooter, { summaryText, summaryMethod: summaryMethod??defaultSummaryMethod, scroll: unref(scrollRef) });
+      }
       : undefined;
   });
 

@@ -69,7 +69,6 @@ export default defineComponent({
       emit('scroll', { top: wrap.value.scrollTop, left: wrap.value.scrollTop });
     }, 300, { leading: false });
     const update = () => {
-      console.log(1);
       if (!wrap.value) return;
       heightPercentage.value = (wrap.value.clientHeight * 100) / wrap.value.scrollHeight;
       widthPercentage.value = (wrap.value.clientWidth * 100) / wrap.value.scrollWidth;

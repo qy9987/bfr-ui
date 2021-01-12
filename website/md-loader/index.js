@@ -8,7 +8,6 @@ const md = require('./config');
 
 module.exports = function(source) {
   const content = md.render(source);
-
   const startTag = '<!--element-demo:';
   const startTagLen = startTag.length;
   const endTag = ':element-demo-->';

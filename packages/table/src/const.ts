@@ -1,4 +1,4 @@
-import type { SorterResult } from './types/table';
+import type { FetchSetting, SorterResult } from './types/table';
 
 export const ROW_KEY = 'key';
 
@@ -21,6 +21,14 @@ export const FETCH_SETTING = {
   totalField: 'total',
 };
 
+export function setGolbalFetchSetting(fetchSetting: FetchSetting = {}) {
+  const setting = { ...FETCH_SETTING, ...fetchSetting };
+  FETCH_SETTING.pageField = setting.pageField;
+  FETCH_SETTING.sizeField = setting.sizeField;
+  FETCH_SETTING.listField = setting.listField;
+  FETCH_SETTING.totalField = setting.totalField;
+}
+
 // 配置通用排序函数
 export function DEFAULT_SORT_FN(sortInfo: SorterResult) {
   const { field, order } = sortInfo;
@@ -35,5 +43,5 @@ export function DEFAULT_SORT_FN(sortInfo: SorterResult) {
 //  表格单元格默认布局
 export const DEFAULT_ALIGN = 'center';
 
-export const INDEX_COLUMN_FLAG = 'INDEX';
-export const ACTION_COLUMN_FLAG = 'ACTION';
+export const INDEX_COLUMN_FLAG = 'index';
+export const ACTION_COLUMN_FLAG = 'action';

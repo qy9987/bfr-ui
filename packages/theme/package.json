@@ -4,5 +4,8 @@
   "license": "MIT",
   "scripts": {
     "build": "gulp --gulpfile gulpfile.js"
+  },
+  "devDependencies": {
+    "@vue/test-utils": "^2.0.0-beta.14"
   }
 }

@@ -76,7 +76,6 @@ const runBuild = async () => {
 
     try {
       const bundle = await rollup.rollup(inputOptions)
-      console.log(name, 'done')
       await bundle.write(outOptions)
       index++
       if (index < inputs.length) {

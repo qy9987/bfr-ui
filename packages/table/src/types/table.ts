@@ -1,6 +1,5 @@
 import type { VNode, VNodeChild } from 'vue';
 import type { PaginationProps } from './pagination';
-// import type { FormProps } from '/@/components/Form';
 import type {
   ColumnProps,
   TableRowSelection as ITableRowSelection,
@@ -85,7 +84,7 @@ export interface GetColumnsParams {
   sort?: boolean;
 }
 
-export type SizeType = 'default' | 'middle' | 'small' | 'large';
+export type SizeType = 'default' | 'middle' | 'small';
 
 export interface TableActionType {
   reload: (opt?: FetchParams) => Promise<void>;
@@ -122,12 +121,11 @@ export interface TableSetting {
   redo?: boolean;
   size?: boolean;
   setting?: boolean;
+  allowFixed?: boolean;
   fullScreen?: boolean;
 }
 
 export interface BasicTableProps<T = any> {
-  // 点击行选中
-  clickToRowSelect?: boolean;
   // 自定义排序方法
   sortFn?: (sortInfo: SorterResult) => any;
   // 取消表格的默认padding
@@ -140,38 +138,29 @@ export interface BasicTableProps<T = any> {
   // 是否自动生成key
   autoCreateKey?: boolean;
   // 计算合计行的方法
-  summaryFunc?: (...arg: any) => any[];
+  summaryMethod?: (dataSource: Recordable[], columns:BasicColumn[]) => Array<number|string>;
+  // 合计行第一列的文本
+  summaryText?: string;
   // 是否显示合计行
   showSummary?: boolean;
-  // 是否可拖拽列
-  canColDrag?: boolean;
   // 接口请求对象
   api?: (...arg: any) => Promise<any>;
   // 请求之前处理参数
   beforeFetch?: (params: Recordable)=>Recordable;
   // 自定义处理接口返回参数
   afterFetch?: (resArr: Record< string, any>[])=>Record< string, any>[];
-  // 查询条件请求之前处理
-  handleSearchInfoFn?: Fn;
   // 请求接口配置
   fetchSetting?: FetchSetting;
   // 立即请求接口
   immediate?: boolean;
   // 在开起搜索表单的时候，如果没有数据是否显示表格
-  emptyDataIsShowTable?: boolean;
+  showTableInEmpty?: boolean;
   // 额外的请求参数
   searchInfo?: Recordable;
-  // 使用搜索表单
-  useSearchForm?: boolean;
-  // 表单配置
-  // formConfig?: Partial<FormProps>;
   // 列配置
   columns: BasicColumn[];
   // 是否显示序号列
   showIndexColumn?: boolean;
-  // 序号列配置
-  indexColumnProps?: BasicColumn;
-  actionColumn?: BasicColumn;
   // 文本超过宽度是否显示。。。
   ellipsis?: boolean;
 
@@ -195,14 +184,12 @@ export interface BasicTableProps<T = any> {
   // 指定树形结构的列名
   childrenColumnName?: string | string[];
 
-  // 覆盖默认的table元素
-  components?: Recordable;
 
   // 初始时，是否展开所有行
   defaultExpandAllRows?: boolean;
 
   // 默认展开的行
-  defaultExpandedRowKeys?: string[];
+  // defaultExpandedRowKeys?: string[];
 
   // 展开的行
   expandedRowKeys?: string[];
@@ -246,12 +233,6 @@ export interface BasicTableProps<T = any> {
    */
   scroll?: { x?: string | number | true; y?: string | number };
 
-  /**
-   * 是否显示表头
-   * @default true
-   * @type boolean
-   */
-  showHeader?: boolean;
 
   /**
    * 表格大小
@@ -277,13 +258,6 @@ export interface BasicTableProps<T = any> {
    * @type Function
    */
   customRow?: (record: T, index: number) => Recordable;
-
-  /**
-   * 表格元素的 table-layout 属性，设为 fixed 表示内容不会影响列的布局
-   * @default 'fixed'
-   * @type string
-   */
-  tableLayout?: 'auto' | 'fixed' | '';
 
   /**
    * 设置表格内各类浮层的渲染节点，如筛选菜单
@@ -322,12 +296,16 @@ export interface BasicTableProps<T = any> {
   onExpandedRowsChange?: (expandedRows: string[] | number[]) => void;
 }
 
+export interface PercentType {
+  total: number | (() => number);
+}
 export interface BasicColumn extends ColumnProps {
   children?: BasicColumn[];
 
-  //
-  flag?: 'INDEX' | 'DEFAULT' | 'CHECKBOX' | 'RADIO' | 'ACTION';
+  flag?: 'index' | 'action' | 'default' | 'date' | 'datetime' | 'percent';
 
+  dateTemplate?: string; // 类型为date、datetime时数据格式化模板，具体参照dayjs
+  percent?: PercentType;
   slots?: Recordable;
 
   defaultHidden?: boolean;

@@ -11,10 +11,9 @@ import type {
 // import type { FormProps } from '/@/components/Form';
 import { DEFAULT_SORT_FN, FETCH_SETTING } from './const';
 import { propTypes } from '@bfr-ui/utils/propTypes';
-
+import { defaultSummaryMethod } from './hooks/useTableFooter';
 // 注释看 types/table
 export const basicProps = {
-  clickToRowSelect: propTypes.bool.def(true),
   tableSetting: {
     type: Object as PropType<TableSetting>,
   },
@@ -27,14 +26,13 @@ export const basicProps = {
   showTableSetting: propTypes.bool,
   autoCreateKey: propTypes.bool.def(true),
   striped: propTypes.bool.def(true),
+  summaryText: propTypes.string.def('合计'),
   showSummary: propTypes.bool,
 
-  summaryFunc: {
-    type: [Function, Array] as PropType<(...arg: any[]) => any[]>,
+  summaryMethod: {
+    type: Function as PropType<typeof defaultSummaryMethod>,
     default: null,
   },
-
-  canColDrag: propTypes.bool.def(true),
   api: {
     type: Function as PropType<(...arg: any[]) => Promise<any>>,
     default: null,
@@ -47,10 +45,6 @@ export const basicProps = {
     type: Function as PropType<Fn>,
     default: null,
   },
-  handleSearchInfoFn: {
-    type: Function as PropType<Fn>,
-    default: null,
-  },
   fetchSetting: {
     type: Object as PropType<FetchSetting>,
     default: () => {
@@ -60,32 +54,17 @@ export const basicProps = {
   // 立即请求接口
   immediate: propTypes.bool.def(true),
 
-  emptyDataIsShowTable: propTypes.bool.def(true),
+  showTableInEmpty: propTypes.bool.def(true),
   // 额外的请求参数
   searchInfo: {
     type: Object as PropType<any>,
     default: null,
   },
-  // 使用搜索表单
-  useSearchForm: propTypes.bool,
-  // // 表单配置
-  // formConfig: {
-  //   type: Object as PropType<Partial<FormProps>>,
-  //   default: null,
-  // },
   columns: {
     type: [Array] as PropType<BasicColumn[]>,
     default: () => [],
   },
   showIndexColumn: propTypes.bool.def(true),
-  indexColumnProps: {
-    type: Object as PropType<BasicColumn>,
-    default: null,
-  },
-  actionColumn: {
-    type: Object as PropType<BasicColumn>,
-    default: null,
-  },
   ellipsis: propTypes.bool.def(true),
   clearSelectOnPageChange: propTypes.bool,
   rowSelection: {

@@ -1,6 +1,5 @@
 <template>
   <Table
-    v-if="summaryFunc"
     :show-header="false"
     :bordered="false"
     :pagination="false"
@@ -12,25 +11,33 @@
   />
 </template>
 <script lang="ts">
-import type { PropType } from 'vue';
+import { PropType, ref, watch } from 'vue';
 
-import { defineComponent, unref, computed, toRaw } from 'vue';
+import { defineComponent, unref, computed } from 'vue';
 import { Table } from 'ant-design-vue';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, isEmpty } from 'lodash';
 import { isFunction } from '@bfr-ui/utils/is';
 import type { BasicColumn } from '../types/table';
-import { INDEX_COLUMN_FLAG } from '../const';
 import { propTypes } from '@bfr-ui/utils/propTypes';
 import { useTableContext } from '../hooks/useTableContext';
+import { defaultSummaryMethod } from '../hooks/useTableFooter';
 
-const SUMMARY_ROW_KEY = '_row';
-const SUMMARY_INDEX_KEY = '_index';
 export default defineComponent({
   name: 'BasicTableFooter',
   components: { Table },
   props: {
-    summaryFunc: {
-      type: Function as PropType<Fn>,
+    summaryMethod: {
+      type: Function as PropType<typeof defaultSummaryMethod>,
+    },
+    summaryText: {
+      type: String,
+      default: '合计',
+    },
+    data: {
+      type: Array,
+    },
+    columns: {
+      type: Array,
     },
     scroll: {
       type: Object as PropType<Recordable>,
@@ -39,46 +46,40 @@ export default defineComponent({
   },
   setup(props) {
     const table = useTableContext();
-
-    const getDataSource = computed((): Recordable[] => {
-      const { summaryFunc } = props;
-      if (!isFunction(summaryFunc)) {
+    const summaryMethod = ref(props.summaryMethod);
+    const getDataSource = computed(()=>{
+      const columns: BasicColumn[] = cloneDeep(table.getColumns());
+      if (!isFunction(unref(summaryMethod))) {
         return [];
       }
-      let dataSource = toRaw(unref(table.getDataSource()));
-      dataSource = summaryFunc(dataSource);
-      dataSource.forEach((item, i) => {
-        item[props.rowKey] = `${i}`;
-      });
-      return dataSource;
-    });
-
-    const getColumns = computed(() => {
-      const dataSource = unref(getDataSource);
-      const columns: BasicColumn[] = cloneDeep(table.getColumns());
-      const index = columns.findIndex(item => item.flag === INDEX_COLUMN_FLAG);
-      const hasRowSummary = dataSource.some(item => Reflect.has(item, SUMMARY_ROW_KEY));
-      const hasIndexSummary = dataSource.some(item => Reflect.has(item, SUMMARY_INDEX_KEY));
-
-      if (index !== -1) {
-        if (hasIndexSummary) {
-          columns[index].customRender = ({ record }) => record[SUMMARY_INDEX_KEY];
-          columns[index].ellipsis = false;
-        } else {
-          Reflect.deleteProperty(columns[index], 'customRender');
+      // TODO 考虑更好实现
+      const summaryData = summaryMethod.value(table.getDataSource(), columns);
+      const dataSource = { [`${props.rowKey}`]: 'rowKey' };
+      columns.forEach((column, index)=>{
+        // 序号列存在，序号列即为第一列
+        if(index==0&&!(props.summaryMethod instanceof defaultSummaryMethod)) {
+          dataSource[column.dataIndex] = props.summaryText;
+        }else {
+          if(!isEmpty(column.dataIndex)) {
+            dataSource[column.dataIndex] = summaryData[index] as string;
+          }
         }
-      }
-      if (table.getRowSelection() && hasRowSummary) {
-        columns.unshift({
-          width: 60,
-          title: 'selection',
-          key: 'selectionKey',
-          align: 'center',
-          customRender: ({ record }) => record[SUMMARY_ROW_KEY],
-        });
-      }
-      return columns;
+      });
+      return [dataSource];
     });
+    const getColumns = computed(() => {
+      const columns: BasicColumn[] = cloneDeep(table.getColumns());
+      if (!isFunction(unref(summaryMethod))) {
+        return [];
+      }
+      const resColumns = columns.map(column=>{
+        Reflect.deleteProperty(column, 'customRender');
+        return column;
+      });
+      return resColumns;
+    });
+
+
     return { getColumns, getDataSource };
   },
 });
