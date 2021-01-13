@@ -1,5 +1,7 @@
 <template>
   <Table
+    v-if="getDataSource.length>0"
+    class="bfr-table-summary"
     :show-header="false"
     :bordered="false"
     :pagination="false"
@@ -11,11 +13,11 @@
   />
 </template>
 <script lang="ts">
-import { PropType, ref, watch } from 'vue';
+import { PropType } from 'vue';
 
 import { defineComponent, unref, computed } from 'vue';
 import { Table } from 'ant-design-vue';
-import { cloneDeep, isEmpty } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { isFunction } from '@bfr-ui/utils/is';
 import type { BasicColumn } from '../types/table';
 import { propTypes } from '@bfr-ui/utils/propTypes';
@@ -46,7 +48,7 @@ export default defineComponent({
   },
   setup(props) {
     const table = useTableContext();
-    const summaryMethod = ref(props.summaryMethod);
+    const summaryMethod = computed(()=>props.summaryMethod??defaultSummaryMethod);
     const getDataSource = computed(()=>{
       const columns: BasicColumn[] = cloneDeep(table.getColumns());
       if (!isFunction(unref(summaryMethod))) {
@@ -57,21 +59,16 @@ export default defineComponent({
       const dataSource = { [`${props.rowKey}`]: 'rowKey' };
       columns.forEach((column, index)=>{
         // 序号列存在，序号列即为第一列
-        if(index==0&&!(props.summaryMethod instanceof defaultSummaryMethod)) {
+        if(index==0&&!props.summaryMethod) {
           dataSource[column.dataIndex] = props.summaryText;
         }else {
-          if(!isEmpty(column.dataIndex)) {
-            dataSource[column.dataIndex] = summaryData[index] as string;
-          }
+          column.dataIndex&& (dataSource[column.dataIndex] = summaryData[index] as string);
         }
       });
       return [dataSource];
     });
     const getColumns = computed(() => {
       const columns: BasicColumn[] = cloneDeep(table.getColumns());
-      if (!isFunction(unref(summaryMethod))) {
-        return [];
-      }
       const resColumns = columns.map(column=>{
         Reflect.deleteProperty(column, 'customRender');
         return column;

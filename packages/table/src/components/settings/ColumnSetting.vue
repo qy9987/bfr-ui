@@ -20,13 +20,10 @@
             列展示
           </Checkbox>
 
-          <!-- <Checkbox v-model:checked="checkIndex" @change="handleIndexCheckChange">
-            序号列
-          </Checkbox> -->
 
-          <a-button size="small" type="link" @click="reset">
+          <Button size="small" type="link" @click="reset">
             重置
-          </a-button>
+          </Button>
         </div>
       </template>
 
@@ -86,7 +83,7 @@ import {
   unref,
   computed,
 } from 'vue';
-import { Tooltip, Popover, Checkbox, Divider } from 'ant-design-vue';
+import { Tooltip, Popover, Checkbox, Divider, Button } from 'ant-design-vue';
 import { SettingOutlined, DragOutlined,ArrowLeftOutlined, ArrowRightOutlined  } from '@ant-design/icons-vue';
 import { ScrollContainer } from '@bfr-ui/container';
 
@@ -94,9 +91,8 @@ import { useTableContext } from '../../hooks/useTableContext';
 import { useSortable } from '@bfr-ui/hooks/web/useSortable';
 
 import { isNullAndUnDef } from '@bfr-ui/utils/is';
-import { getPopupContainer } from '@bfr-ui/utils';
 
-import type { BasicColumn, BasicTableProps } from '../../types/table';
+import type { BasicColumn } from '../../types/table';
 import { propTypes } from '@bfr-ui/utils/propTypes';
 
   interface State {
@@ -121,6 +117,7 @@ export default defineComponent({
     Popover,
     Tooltip,
     Checkbox,
+    Button,
     CheckboxGroup: Checkbox.Group,
     DragOutlined,
     ScrollContainer,
@@ -133,6 +130,7 @@ export default defineComponent({
   },
   setup() {
     const table = useTableContext();
+    const getPopupContainer = computed(()=>table.getBindValues.value.getPopupContainer);
 
     let inited = false;
 
@@ -149,8 +147,6 @@ export default defineComponent({
       defaultCheckList: [],
     });
 
-    const checkIndex = ref(false);
-
     const prefixCls = 'bfr-column-setting';
 
     const getValues = computed(() => {
@@ -164,11 +160,6 @@ export default defineComponent({
       }
     });
 
-
-    watchEffect(() => {
-      const values = unref(getValues) as BasicTableProps<any>;
-      checkIndex.value = !!values.showIndexColumn;
-    });
 
     function getColumns() {
       const ret: Options[] = [];
@@ -295,13 +286,6 @@ export default defineComponent({
       });
     }
 
-    // Control whether the serial number column is displayed
-    function handleIndexCheckChange(e: ChangeEvent) {
-      table.setProps({
-        showIndexColumn: e.target.checked,
-      });
-    }
-
 
     function handleColumnFixed(item: BasicColumn, fixed?: 'left' | 'right') {
       if (!state.checkedList.includes(item.dataIndex as string)) return;
@@ -331,8 +315,6 @@ export default defineComponent({
       prefixCls,
       columnListRef,
       handleVisibleChange,
-      checkIndex,
-      handleIndexCheckChange,
       handleColumnFixed,
       getPopupContainer,
     };

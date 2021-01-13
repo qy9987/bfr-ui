@@ -1,16 +1,15 @@
 <template>
   <div
+    v-show="getEmptyDataIsShowTable"
     ref="wrapRef"
     :class="[
       prefixCls,
       {
-        [`${prefixCls}--inset`]: getBindValues.inset,
         'bfr-table__noscroll': noScroll
       },
     ]"
   >
     <Table
-      v-show="getEmptyDataIsShowTable"
       ref="tableElRef"
       v-bind="getBindValues"
       :row-class-name="getRowClassName"
@@ -26,10 +25,8 @@
 import type { BasicTableProps, TableActionType, SizeType, SorterResult } from './types/table';
 import { PaginationProps } from './types/pagination';
 
-import { defineComponent, ref, computed, unref, getCurrentInstance } from 'vue';
+import { defineComponent, ref, computed, unref, getCurrentInstance, watch } from 'vue';
 import { Table } from 'ant-design-vue';
-
-import { isFunction } from '@bfr-ui/utils/is';
 
 import { omit } from 'lodash';
 
@@ -86,7 +83,7 @@ export default defineComponent({
       setColumns,
       getColumnsRef,
       getCacheColumns,
-    } = useColumns(realProps, paginationInfo);
+    } = useColumns(realProps);
     // data-source hook
     const {
       getDataSourceRef,
@@ -121,7 +118,7 @@ export default defineComponent({
       getColumnsRef,
       getRowSelectionRef,
     );
-    // 判断是否需要显示滚动条
+    // // 判断是否需要显示滚动条
     const noScroll = computed(()=>{
       return !getScrollRef.value.y;
     });
@@ -175,24 +172,19 @@ export default defineComponent({
       }
       return !!unref(getDataSourceRef).length;
     });
+
     // 表格分页、排序、筛选变化时触发
     function handleTableChange(
       pagination: PaginationProps,
       filterInfo: Partial<Recordable<string[]>>,
-      sorter: SorterResult,
+      sortInfo: SorterResult,
     ) {
-      const { clearSelectOnPageChange, sortFn } = unref(realProps);
+      const { clearSelectOnPageChange } = unref(realProps);
       if (clearSelectOnPageChange) {
         clearSelectedRowKeys();
       }
       setPagination(pagination);
-
-      if (sorter && isFunction(sortFn)) {
-        const sortInfo = sortFn(sorter);
-        fetch({ sortInfo, filterInfo });
-        return;
-      }
-      fetch({ filterInfo });
+      fetch({ sortInfo, filterInfo });
     }
 
     function setProps(props: Partial<BasicTableProps>) {

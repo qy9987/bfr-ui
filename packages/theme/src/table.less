@@ -1,4 +1,5 @@
 @import './common/var';
+
 .bfr-table {
   &.bfr-table__noscroll {
     *::-webkit-scrollbar {
@@ -11,12 +12,6 @@
   &-row__striped {
     td {
       background: #fafafa;
-    }
-  }
-
-  &--inset {
-    .ant-table-wrapper {
-      padding: 0;
     }
   }
 
@@ -245,9 +240,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  padding-left: 7px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  color: @text-color-base;
+
+
+  &.show-span::before {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    width: 3px;
+    height: 16px;
+    margin-right: 4px;
+    background: @primary-color;
+    content: '';
+  }
+
+  &__help {
+    margin-left: 10px;
+  }
 }
+
 .bfr-table-settings {
-  & > * {
+  &>* {
     margin-right: 12px;
   }
 
@@ -256,6 +274,7 @@
     height: 1.3em;
   }
 }
+
 .table-coulmn-drag-icon {
   margin: 0 5px;
   cursor: move;

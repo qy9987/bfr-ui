@@ -69,7 +69,7 @@ export function useDataSource(
     if (!api || !isFunction(api)) return;
     try {
       setLoading(true);
-      const { pageField, sizeField, listField, totalField } =Object.assign(FETCH_SETTING, fetchSetting?fetchSetting:{});
+      const { pageField, sizeField, listField, totalField } = Object.assign(FETCH_SETTING, fetchSetting?fetchSetting:{});
       let pageParams: Recordable = {};
 
       const { current = 1, pageSize = PAGE_SIZE } = unref(paginationInfo) as PaginationProps;
@@ -83,10 +83,13 @@ export function useDataSource(
 
       let params: Recordable = {
         ...pageParams,
-        ...searchInfo,
-        ...(opt ? opt.searchInfo : {}),
-        ...(opt ? opt.sortInfo : {}),
-        ...(opt ? opt.filterInfo : {}),
+        searchInfo: {
+          ...searchInfo,
+          ...(opt ? opt.searchInfo : {}),
+
+        },
+        sortInfo:(opt ? opt.sortInfo : {}),
+        filterInfo: (opt ? opt.filterInfo : {}),
       };
       if (beforeFetch && isFunction(beforeFetch)) {
         params = beforeFetch(params) || params;

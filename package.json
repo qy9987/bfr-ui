@@ -8,6 +8,7 @@
   "private": true,
   "scripts": {
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "bootstrap": "yarn --frozen-lockfile && npx lerna bootstrap",
     "link": "cd packages && cd bfr-ui && yarn link",
     "build": "yarn bootstrap && yarn clean:lib && yarn build:esm-bundle && yarn build:lib && yarn build:lib-full && yarn build:esm && yarn build:theme",

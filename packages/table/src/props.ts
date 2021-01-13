@@ -4,23 +4,18 @@ import type {
   BasicColumn,
   FetchSetting,
   TableSetting,
-  SorterResult,
   TableCustomRecord,
   TableRowSelection,
 } from './types/table';
 // import type { FormProps } from '/@/components/Form';
-import { DEFAULT_SORT_FN, FETCH_SETTING } from './const';
+import { FETCH_SETTING } from './const';
 import { propTypes } from '@bfr-ui/utils/propTypes';
 import { defaultSummaryMethod } from './hooks/useTableFooter';
+import { getPopupContainer } from '@bfr-ui/utils';
 // 注释看 types/table
 export const basicProps = {
   tableSetting: {
     type: Object as PropType<TableSetting>,
-  },
-  inset: propTypes.bool,
-  sortFn: {
-    type: Function as PropType<(sortInfo: SorterResult) => any>,
-    default: DEFAULT_SORT_FN,
   },
 
   showTableSetting: propTypes.bool,
@@ -64,7 +59,6 @@ export const basicProps = {
     type: [Array] as PropType<BasicColumn[]>,
     default: () => [],
   },
-  showIndexColumn: propTypes.bool.def(true),
   ellipsis: propTypes.bool.def(true),
   clearSelectOnPageChange: propTypes.bool,
   rowSelection: {
@@ -72,7 +66,7 @@ export const basicProps = {
     default: null,
   },
   title: {
-    type: [String, Function] as PropType<string | ((data: Recordable) => string)>,
+    type: String,
     default: null,
   },
   titleHelpMessage: {
@@ -101,5 +95,9 @@ export const basicProps = {
   scroll: {
     type: Object as PropType<{ x: number | true; y: number }>,
     default: null,
+  },
+  getPopupContainer: {
+    type: Function as PropType<(triggerNode?: HTMLElement) => HTMLElement>,
+    default: getPopupContainer,
   },
 };

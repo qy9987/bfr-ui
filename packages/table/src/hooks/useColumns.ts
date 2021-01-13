@@ -1,23 +1,20 @@
 import { BasicColumn, BasicTableProps, GetColumnsParams } from '../types/table';
-import { PaginationProps } from '../types/pagination';
 import { unref, ComputedRef, Ref, computed, ref, toRaw, watch } from 'vue';
-import { isBoolean, isArray, isString } from '@bfr-ui/utils/is';
-import { DEFAULT_ALIGN, PAGE_SIZE, INDEX_COLUMN_FLAG, ACTION_COLUMN_FLAG } from '../const';
-import { isEqual, cloneDeep } from 'lodash';
+import {  isArray, isString } from '@bfr-ui/utils/is';
+import { DEFAULT_ALIGN,  INDEX_COLUMN_FLAG, ACTION_COLUMN_FLAG } from '../const';
+import {  cloneDeep } from 'lodash';
 import { formatter } from '@bfr-ui/utils/date';
 
 function handleItem(item: BasicColumn, ellipsis: boolean) {
   const { key, dataIndex, children } = item;
   item.align = item.align || DEFAULT_ALIGN;
-  if (ellipsis) {
-    if (!key) {
-      item.key = dataIndex;
-    }
-    if (!isBoolean(item.ellipsis)) {
-      Object.assign(item, {
-        ellipsis,
-      });
-    }
+  if (!key) {
+    item.key = dataIndex;
+  }
+  if (!Reflect.has(item, 'ellipsis') || item.ellipsis !== ellipsis) {
+    Object.assign(item, {
+      ellipsis,
+    });
   }
 
   if (children && children.length) {
@@ -33,80 +30,11 @@ function handleChildren(children: BasicColumn[] | undefined, ellipsis: boolean) 
     handleChildren(children, ellipsis);
   });
 }
-// 序号列配置
-function handleIndexColumn(
-  propsRef: ComputedRef<BasicTableProps>,
-  paginationRef: ComputedRef<boolean | PaginationProps>,
-  columns: BasicColumn[],
-) {
-  const { showIndexColumn } = unref(propsRef);
-
-  const index = columns.findIndex(column => column.flag === INDEX_COLUMN_FLAG);
-  if (showIndexColumn) {
-    const isFixedLeft = columns.some(item => item.fixed === 'left');
-    const column: BasicColumn = {
-      flag: INDEX_COLUMN_FLAG,
-      width: 50,
-      title: '序号',
-      dataIndex: '$index',
-      key: '$index',
-      align: 'center',
-      customRender: ({ index }) => {
-        const getPagination = unref(paginationRef);
-        if (isBoolean(getPagination)) {
-          return `${index + 1}`;
-        }
-        const { current = 1, pageSize = PAGE_SIZE } = getPagination;
-        const currentIndex = (current - 1) * pageSize + index + 1;
-        return currentIndex;
-      },
-      ...(isFixedLeft
-        ? {
-          fixed: 'left',
-        }
-        : {}),
-      ...index!==-1?columns[index]:{},
-    };
-    if (index === -1) {
-      columns.unshift(column);
-    } else {
-      columns[index] = column;
-    }
-  } else {
-    if (index !== -1) {
-      columns.splice(index,1);
-    }
-  }
-}
-// 操作列配置
-function handleActionColumn( columns: BasicColumn[]) {
-  const hasIndex = columns.findIndex(column => column.flag === ACTION_COLUMN_FLAG);
-  if (hasIndex !== -1) {
-    const isFixedRight = columns.some(item => item.fixed === 'right');
-    columns[hasIndex] = {
-      fixed: isFixedRight?'right':false,
-      key: '$action',
-      dataIndex: '$action',
-      ...columns[hasIndex],
-      width: 200,
-      flag: ACTION_COLUMN_FLAG,
-    };
-  }
-}
-
 export function useColumns(
   propsRef: ComputedRef<BasicTableProps>,
-  paginationRef: ComputedRef<boolean | PaginationProps>,
 ) {
-  const columnsRef = (ref(unref(propsRef).columns) as unknown) as Ref<BasicColumn[]>;
   // 监听序号列展示
-  watch([()=>propsRef.value.showIndexColumn], () => {
-    handleIndexColumn(propsRef, paginationRef, unref(columnsRef));
-  }, { immediate: true });
-  // 监听操作列展示
-  watch([()=>propsRef.value.columns], () => {
-    handleActionColumn(unref(columnsRef));
-  }, { immediate: true });
+  const columnsRef = (ref(unref(propsRef).columns) as unknown) as Ref<BasicColumn[]>;
   let cacheColumns = unref(propsRef).columns;
   const getColumnsRef = computed(() => {
     const columns = unref(columnsRef);
@@ -114,11 +42,49 @@ export function useColumns(
       return [];
     }
     // 是否展示省略号
-    const { ellipsis } = unref(propsRef);
-
-    columns.forEach(item => {
+    const ellipsis = unref(propsRef).ellipsis;
+    const indexs = [];
+    let index = 0;
+    for (const item of columns) {
       const { flag, customRender, slots } = item;
-      if (!customRender&&(!slots||(slots&&!slots.customRender))) {
+      const hasSlotRender = slots&&slots.customRender;
+      if (flag == 'index') {
+        indexs.push(index);
+        if (indexs.length > 1) {
+          throw new Error(`duplicate sequence number column, column index: ${indexs.join(',')}`);
+        }
+        const isFixedLeft = columns.some(item => item.fixed === 'left');
+        const column: BasicColumn = {
+          flag: INDEX_COLUMN_FLAG,
+          width: 50,
+          title: '序号',
+          dataIndex: '$index',
+          key: '$index',
+          align: 'center',
+          ...hasSlotRender ? {} : {
+            customRender:({ index }) =>`${index + 1}`,
+          },
+          ...(isFixedLeft
+            ? {
+              fixed: 'left',
+            }
+            : {}),
+          ...item,
+        };
+        columns[index] = column;
+      } else if (flag === 'action') {
+        const isFixedRight = columns.some(item => item.fixed === 'right');
+        const column: BasicColumn = {
+          fixed: isFixedRight?'right':false,
+          key: '$action',
+          dataIndex: '$action',
+          ...item,
+          width: 200,
+          flag: ACTION_COLUMN_FLAG,
+        };
+        columns[index] = column;
+      }
+      if (!customRender && !hasSlotRender) {
         if (flag == 'datetime') {
           item.customRender = ({ text }) => {
             return formatter(text, item.dateTemplate||'YYYY-MM-DD HH:mm:ss' );
@@ -142,24 +108,24 @@ export function useColumns(
       }
       handleItem(
         item,
-        Reflect.has(item, 'ellipsis') ? !!item.ellipsis : !!ellipsis && !customRender && !slots,
+        ellipsis?(Reflect.has(item, 'ellipsis')?!!item.ellipsis: !customRender && !slots): false,
+        // Reflect.has(item, 'ellipsis') ? !!item.ellipsis : !!ellipsis && !customRender && !slots,
       );
-    });
+      index += 1;
+    }
     return columns;
   });
-  // 根据fixed进行列重排序
   const getSortFixedColumns = computed(() => {
     return useFixedColumn(unref(getColumnsRef));
   });
   // 监听columns的修改，用于更新cacheColumns
   watch(
-    () => unref(propsRef).columns,
+    ()=>propsRef.value.columns,
     columns => {
       columnsRef.value = columns;
       cacheColumns = columns?.filter(item => !item.flag) ?? [];
     },
   );
-
   /**
    * 设置表头数据
    * @param columnList key｜column
@@ -206,7 +172,6 @@ export function useColumns(
     if (sort) {
       columns = useFixedColumn(columns);
     }
-
     return columns;
   }
   function getCacheColumns() {
@@ -223,13 +188,11 @@ export function useFixedColumn(columns: BasicColumn[]) {
   for (const column of columns) {
     if (column.fixed === 'left') {
       fixedLeftColumns.push(column);
-      continue;
-    }
-    if (column.fixed === 'right') {
+    }else if (column.fixed === 'right') {
       fixedRightColumns.push(column);
-      continue;
+    } else {
+      defColumns.push(column);
     }
-    defColumns.push(column);
   }
   const resultColumns = [...fixedLeftColumns, ...defColumns, ...fixedRightColumns].filter(
     item => !item.defaultHidden,

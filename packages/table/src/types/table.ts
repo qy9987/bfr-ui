@@ -122,14 +122,9 @@ export interface TableSetting {
   size?: boolean;
   setting?: boolean;
   allowFixed?: boolean;
-  fullScreen?: boolean;
 }
 
 export interface BasicTableProps<T = any> {
-  // 自定义排序方法
-  sortFn?: (sortInfo: SorterResult) => any;
-  // 取消表格的默认padding
-  inset?: boolean;
   // 显示表格设置
   showTableSetting?: boolean;
   tableSetting?: TableSetting;
@@ -159,8 +154,6 @@ export interface BasicTableProps<T = any> {
   searchInfo?: Recordable;
   // 列配置
   columns: BasicColumn[];
-  // 是否显示序号列
-  showIndexColumn?: boolean;
   // 文本超过宽度是否显示。。。
   ellipsis?: boolean;
 
@@ -187,9 +180,6 @@ export interface BasicTableProps<T = any> {
 
   // 初始时，是否展开所有行
   defaultExpandAllRows?: boolean;
-
-  // 默认展开的行
-  // defaultExpandedRowKeys?: string[];
 
   // 展开的行
   expandedRowKeys?: string[];

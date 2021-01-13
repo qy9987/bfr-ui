@@ -44,8 +44,8 @@ export function useTableFooter(
   const getFooterProps = computed((): Recordable | undefined => {
     const { summaryMethod, showSummary, summaryText } = unref(propsRef);
     return showSummary && !unref(getIsEmptyData)
-      ? data => {
-        return h(TableFooter, { summaryText, summaryMethod: summaryMethod??defaultSummaryMethod, scroll: unref(scrollRef) });
+      ? () => {
+        return h(TableFooter, { summaryText, summaryMethod: summaryMethod, scroll: unref(scrollRef) });
       }
       : undefined;
   });

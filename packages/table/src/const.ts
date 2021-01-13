@@ -1,4 +1,4 @@
-import type { FetchSetting, SorterResult } from './types/table';
+import type { FetchSetting } from './types/table';
 
 export const ROW_KEY = 'key';
 
@@ -29,16 +29,6 @@ export function setGolbalFetchSetting(fetchSetting: FetchSetting = {}) {
   FETCH_SETTING.totalField = setting.totalField;
 }
 
-// 配置通用排序函数
-export function DEFAULT_SORT_FN(sortInfo: SorterResult) {
-  const { field, order } = sortInfo;
-  return {
-    // 传给后台的排序字段你
-    field,
-    // 传给后台的排序方式  asc/desc
-    order,
-  };
-}
 
 //  表格单元格默认布局
 export const DEFAULT_ALIGN = 'center';

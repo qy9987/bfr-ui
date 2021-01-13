@@ -4,7 +4,12 @@
       <span>密度</span>
     </template>
 
-    <Dropdown placement="bottomCenter" :trigger="['click']">
+    <Dropdown
+      ref="dropdown"
+      :get-popup-container="getPopupContainer"
+      placement="bottomCenter"
+      :trigger="['click']"
+    >
       <ColumnHeightOutlined />
       <template #overlay>
         <Menu v-model:selectedKeys="selectedKeysRef" selectable @click="handleTitleClick">
@@ -23,7 +28,7 @@
   </Tooltip>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import { useTableContext } from '../../hooks/useTableContext';
 import { Tooltip, Dropdown, Menu } from 'ant-design-vue';
 import { ColumnHeightOutlined } from '@ant-design/icons-vue';
@@ -41,7 +46,7 @@ export default defineComponent({
   },
   setup() {
     const table = useTableContext();
-
+    const getPopupContainer = computed(()=>table.getBindValues.value.getPopupContainer);
     const selectedKeysRef = ref<SizeType[]>([table.getSize()]);
 
     function handleTitleClick({ key }: { key: SizeType }) {
@@ -50,8 +55,8 @@ export default defineComponent({
         size: key,
       });
     }
-
     return {
+      getPopupContainer,
       handleTitleClick,
       selectedKeysRef,
     };

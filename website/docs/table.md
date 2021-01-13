@@ -18,6 +18,8 @@
     data() {
       return {
         columns: [{
+        flag: 'index'
+        },{
         title: '日期',
         dataIndex: 'date',
         width: 200,
@@ -49,7 +51,7 @@
             address: '成都市天府新区海昌路2039号'
           }]
       }
-    }
+    },
   }
 </script>
 ```
@@ -59,56 +61,57 @@
 :::demo
 ```html
 <template>
-  <bfr-table title="省略单元格" :data-source="dataSource" :columns="columns" />
+  <bfr-table title="省略单元格" :ellipsis="ellipsis" :data-source="dataSource" :columns="columns" />
 </template>
 <script>
   export default {
     data() {
       return {
+        ellipsis: true,
         columns: [{
-        title: '日期',
-        dataIndex: 'date',
-        width: 200,
-        customRender: ({text, index})=>{
-          return {
-            children: text,
-            props: {rowSpan: index%2==0?2:0}
+          title: '日期',
+          dataIndex: 'date',
+          width: 200,
+          customRender: ({text, index})=>{
+            return {
+              children: text,
+              props: {rowSpan: index%2==0?2:0}
+            }
           }
-        }
         },{
-        title: '日期',
-        dataIndex: 'date',
-        width: 200,
+          title: '日期',
+          dataIndex: 'date',
+          width: 200,
         },{
-        title: '姓名',
-        dataIndex: 'name',
-        width: 200,
-        colSpan: 2,
-        customRender: ({text, index})=>{
-          return {
-            children: text,
-            props: {colSpan: 2}
+          title: '姓名',
+          dataIndex: 'name',
+          width: 200,
+          colSpan: 2,
+          customRender: ({text, index})=>{
+            return {
+              children: text,
+              props: {colSpan: 2}
+            }
           }
-        }
         },{
-        title: '姓名',
-        dataIndex: 'name',
-        width: 200,
-        colSpan: 0,
-        customRender: ({text, index})=>{
-          return {
-            children: text,
-            props: {colSpan: 0}
+          title: '姓名',
+          dataIndex: 'name',
+          width: 200,
+          colSpan: 0,
+          customRender: ({text, index})=>{
+            return {
+              children: text,
+              props: {colSpan: 0}
+            }
           }
-        }
         },{
-        title: '地址',
-        dataIndex: 'address',
-        width: 100,
+          title: '地址',
+          dataIndex: 'address',
+          width: 100,
         },{
-        title: '地址',
-        dataIndex: 'address',
-        width: 100,
+          title: '地址',
+          dataIndex: 'address',
+          width: 100,
         }],
         dataSource: [{
             date: '2021-01-01',
@@ -197,8 +200,8 @@
     :fetch-setting="fetchSetting" 
     :api="fetchData" 
     :columns="columns"
-    :showIndexColumn="showIndexColumn"
   >
+    
     <template #filterDropdown="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }">
       123
     </template>
@@ -222,6 +225,8 @@
           pageSizeOptions: ['1','2','3'],
         },
         columns: [{
+          flag: 'index'
+        },{
         flag:'date',
         title: '日期',
         dataIndex: 'date',
@@ -247,13 +252,7 @@
             customRender: 'actions'
           },
         }],
-        showIndexColumn: false
       }
-    },
-    mounted() {
-      setTimeout(()=>{
-        this.showIndexColumn = !this.showIndexColumn;
-      }, 2000)
     },
     methods: {
       beforeFetch(params){
@@ -346,7 +345,7 @@
 :::demo
 ```html
 <template>
-  <bfr-table @row-click="rowClick" @row-dbClick="rowDbClick" @row-contextmenu="rowContextmenu" 
+  <bfr-table @change="handleChange" @row-click="rowClick" @row-dbClick="rowDbClick" @row-contextmenu="rowContextmenu" 
   showTableSetting
   @row-mouseenter="rowMouseenter" @row-mouseleave="rowMouseleave" :pagination="false" :data-source="dataSource" :columns="columns">
   <template #toolbar>
@@ -369,6 +368,7 @@
         title: '姓名',
         dataIndex: 'name',
         width: 200,
+        sorter: (a, b)=>a-b
         },{
         title: '地址',
         dataIndex: 'address',
@@ -395,6 +395,12 @@
       }
     },
     methods: {
+      getPopupContainer() {
+        return document.querySelector("#app")
+      },
+      handleChange(...args) {
+        console.log(args);
+      },
       rowClick(record, index, event) {
         console.log( 'row-click',record, index, event);
       },
@@ -421,35 +427,31 @@
 #### Attributes
 | 参数      | 说明          | 类型      | 可选值                           | 默认值  | 版本  |
 |---------- |-------------- |---------- |--------------------------------  |-------- |-------- |
-| sortFn     | 自定义排序方法           | (sortInfo: SorterResult) => any | — | — | — |
-| inset     | 取消表格的默认padding           | boolean | — | — | — |
-| showTableSetting     | 显示表格功能栏          | boolean | — | — | — |
-| tableSetting     | 显示表格功能栏          | [tablesetting](#tablesetting) | — | — | — |
+| autoCreateKey     | 自动生成数据key，rowKey设置后不可使用 | boolean | — | true | — |
+| rowKey     | 表格行 key 的取值,设置后则无法使用autoCreateKey属性          | string \| ((record: object) => string) | — | key | — |
 | bordered     | 是否显示边框          | boolean | — | — | — |
 | striped     | 显示斑马纹          | boolean | — | — | — |
-| autoCreateKey     | 自动生成数据key | boolean | — | true | — |
-| summaryMethod     | 计算合计行的方法          | (dataSources: object[], columns: [BasicColumn](#basiccolumn)[]): Array< string \| number > | — | — | — |
 | showSummary     | 是否显示合计行          | boolean | — | — | — |
+| summaryMethod     | 计算合计行的方法          | (dataSources: object[], columns: [BasicColumn](#basiccolumn)[]): Array< string \| number > | — | — | — |
 | api     | 接口请求对象          | (...arg: any) => Promise< any > | — | — | — |
 | beforeFetch     | 请求之前处理参数          |  (params: object) => object | — | — | — |
 | afterFetch     | 定义处理接口返回参数          |  (resArr: object[]) => object[] | — | — | — |
 | fetchSetting     | 接口请求配置，可以配置请求的字段和响应的字段名，见下方全局配置说明           | [FetchSetting](#fetchsetting) | — | — | — |
 | immediate     | 初始化后立即请求接口           | boolean | — | true | — |
-| showTableInEmpty     | 在存在搜索表单的时候，如果没有数据是否显示表格           | boolean | — | — | — |
+| showTableInEmpty     | 如果没有数据是否显示表格           | boolean | — | — | — |
 | searchInfo     | 额外的请求参数           | object | — | — | — |
 | columns     | 列属性配置           | [BasicColumn](#basiccolumn)[] | — | — | — |
-| showIndexColumn     | 显示序号列           | boolean | — | — | — |
-| ellipsis     | 文本超过长度是否显示省略号，配置为true时表格列数据不予许换行           | boolean | — | true | — |
-| clearSelectOnPageChange     | 切换页码是否重置勾选状态          | boolean | — | — |  — |
-| rowKey     | 表格行 key 的取值          | string \| ((record: object) => string) | — | key | — |
 | dataSource     | 表格渲染数据,非 api 加载情况         | object[] | — | — | — |
-| titleHelpMessage     | 表格标题右侧提示          | string \| string[] | — | — | — |
+| showTableSetting     | 显示表格功能栏          | boolean | — | — | — |
+| tableSetting     | 表格功能栏设置          | [tablesetting](#tablesetting) | — | — | — |
+| ellipsis     | 文本超过长度是否显示省略号，配置为true时表格列数据不予许换行           | boolean | — | true | — |
+| clearSelectOnPageChange     | 切换页码是否重置勾选状态          | boolean | — | — |  TODO 测试 |
+| titleHelpMessage     | 表格标题右侧提示          | string \| string[] | — | — | TODO 测试 |
 | maxHeight     | 表格最大高度，超过展示滚动条，maxHeight存在时，scroll.y属性无效, maxHeight值为string类型时，必须带有单位，不带有单位会出现滚动条，但无法滚动         | string\|number | — | — | — |
-| pagination     | 分页配置          | [PaginationProps](#paginationprops) \| boolean | — | — | — |
+| pagination     | 分页配置          | [PaginationProps](#paginationprops) \| boolean | — | — | TODO测试 |
 | loading     | 开启loading          | boolean | — | — | — |
 | childrenColumnName     | 指定树形结构的列名          | string \| string[] | — | — | — |
 | defaultExpandAllRows     | 初始时，是否展开所有行          | boolean | — | — | — |
-| defaultExpandedRowKeys     | 默认展开的行,设置该属性时，需要同时设置rowKey          | string[] | — | — | `Delete` |
 | expandedRowKeys     | 展开的行，控制属性, 需要同时设置rowKey         | string[] | — | — | — |
 | expandedRowRender     | 额外的展开行         | ``` (record: {record: object; index: number; indent: number; expanded: boolean}) => VNode | #expandedRowRender="{record, index, indent, expanded} ``` | — | — | — |
 | expandIcon     | 自定义展开图标         | Function(props):VNode \| #expandIcon="props"; | — | — | — |
@@ -462,9 +464,9 @@
 | rowSelection     | 列表项是否可选择       | [RowSelection](#rowselection) | — | null | TODO |
 | scroll     | 设置横向或纵向滚动，也可用于指定滚动区域的宽和高，建议为 x 设置一个数字，如果要设置为 true，需要配合样式 .ant-table td { white-space: nowrap; }       | { x: string \| number \| true; y: string \| number } | — | — | — |
 | size     | 表格大小       | default \| middle \| small  | — | middle | — |
-| title     | 表格标题       |  string \| ((data: Recordable) => string \| VNodeChild \| JSX.Element)  | — | — | — |
+| title     | 表格标题       |  string \| #tableTitle  | — | — | — |
 | customHeaderRow     | 设置头部行属性       | (column: [ColumnProps](#basiccolumn), index: number) => object  | — | — | — |
-| customRow     | 设置行属性       | (record: object, index: number) => object  | — | — | — |
+| customRow     | 设置行属性 ,[用法](https://2x.antdv.com/components/table-cn/#customRow-%E7%94%A8%E6%B3%95)      | (record: object, index: number) => object  | — | — | — |
 | getPopupContainer     | 设置表格内各类浮层的渲染节点，如筛选菜单       |  (triggerNode?: HTMLElement) => HTMLElement  | — | () => TableHtmlElement | — |
 | transformCellText     | 数据渲染前可以再次改变，一般用户空数据的默认配置，可以通过 [ConfigProvider](https://2x.antdv.com/components/config-provider-cn/) 全局统一配置       |  Function({ text, column, record, index }) => any  | — | — | — |
 
@@ -490,6 +492,7 @@
 | footer | 自定义表格尾部 | currentPageData |
 | tableTitle | 自定义表格标题，在表格左上角展示 | — |
 | toolbar | 自定义工具栏，在表格自带工具之前展示 | — |
+| title | 自定义列头显示文字 |  — |
 | action | 自定义操作列 | {text, record} |
 | expandIcon | 自定义展开图标 |     props    |
 | expandedRowRender | 额外的展开行 | {record, index, indent, expanded} |
@@ -523,7 +526,6 @@
 | size | 展示修改表格行大小功能 | boolean | — | — | — |
 | setting | 展示表格行设置功能 | boolean | — | — | — |
 | allowFixed | 展示表格列固定功能 | boolean | — | false | — |
-| fullScreen | 展示全屏按钮 | boolean | — | — | — |
 
 #### FetchSetting
 
@@ -556,7 +558,7 @@
 #### rowSelection
 | 参数      | 说明          | 类型      | 可选值    | 默认值  | 版本  |
 |---------- |-------------- |---------- |----------  |-------- |-------- |
-|columnWidth | 自定义列表选择框宽度 | string\| number | —  | — | — |
+| columnWidth | 自定义列表选择框宽度 | string\| number | —  | — | — |
 | columnTitle | 自定义列表选择框标题 | string\| VNode | —  | — | — |
 | fixed | 把选择框列固定在左边 | boolean | — | — | — |
 | getCheckboxProps | 选择框的默认属性配置 | Function(record) | — | — | — |
@@ -583,7 +585,7 @@
 | filterDropdownVisible | 用于控制自定义筛选菜单是否可见 | boolean | —	| —	|	—	|
 | filtered | 标识数据是否经过过滤，筛选图标会高亮 | boolean |	—	| false | —	|
 | filteredValue | 筛选的受控属性，外界可用此控制列的筛选状态，值为已筛选的 value 数组 | string[] |	—	| —	| —	|
-| filterIcon | 自定义 filter 图标。 | VNode \| ({filtered: boolean, column: Column}) => vNode \|~~slot~~ |	—	| false |	—	|
+| filterIcon | 自定义 filter 图标。 | VNode \| ({filtered: boolean, column: Column}) => vNode \| slot |	—	| false |	—	|
 | filterMultiple | 是否多选 | boolean |	—	| true | —	|
 | filters | 表头的筛选菜单项 | object[] | —	| —	|	—	|
 | fixed | 列是否固定，可选 true(等效于 left) 'left' 'right' | boolean\|string | —	| left \| right \| false |	—	| —	|
@@ -592,7 +594,7 @@
 | sorter | 排序函数，本地排序使用一个函数(参考 Array.sort 的 compareFunction)，需要服务端排序可设为 true | Function \| boolean |	—	| —	| —	|
 | sortOrder | 排序的受控属性，外界可用此控制列的排序，可设置为 'ascend' 'descend' false | boolean\|string | —	| —	|
 | sortDirections | 支持的排序方式，取值为 'ascend' 'descend' | Array | ['ascend', 'descend'] | —	| —	|	—	|
-| title | 列头显示文字 | string\| (data: object) => string \|~~slot~~ | —	| —	|	—	|
+| title | 列头显示文字 | string\| (data: object) => string \|slot | —	| —	|	—	|
 | width | 列宽度 | string|number | —	| —	|	—	|
 | customCell | 设置单元格属性 | Function(record, rowIndex) | —	| —	|	—	|
 | customHeaderCell | 设置头部单元格属性 | Function(column) | —	| —	|	—	|

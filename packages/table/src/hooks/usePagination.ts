@@ -12,7 +12,6 @@ export function usePagination(refProps: ComputedRef<BasicTableProps>) {
 
   const paginationInfo = computed((): PaginationProps | boolean => {
     const { pagination } = unref(refProps);
-
     if (isBoolean(pagination) && !pagination) {
       return false;
     }

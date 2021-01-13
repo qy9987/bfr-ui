@@ -1,44 +1,24 @@
 <template>
-  <BasicTitle v-if="getTitle" :class="prefixCls" :help-message="helpMessage">
-    {{ getTitle }}
-  </BasicTitle>
+  <span v-if="title" class="bfr-table-title show-span">
+    {{ title }}
+    <BasicHelp v-if="helpMessage" class="bfr-table-title__help" :text="helpMessage" />
+  </span>
 </template>
 <script lang="ts">
-import { computed, defineComponent, PropType } from 'vue';
-
-import { BasicTitle } from '@bfr-ui/basic/index';
-import { isFunction } from '@bfr-ui/utils/is';
+import {  defineComponent, PropType } from 'vue';
+import { BasicHelp } from '@bfr-ui/basic';
 export default defineComponent({
   name: 'BasicTableTitle',
-  components: { BasicTitle },
+  components: {
+    BasicHelp,
+  },
   props: {
     title: {
-      type: [Function, String] as PropType<string | ((data: Recordable) => string)>,
-    },
-    getSelectRows: {
-      type: Function as PropType<() => Recordable[]>,
+      type: String,
     },
     helpMessage: {
       type: [String, Array] as PropType<string | string[]>,
     },
-  },
-  setup(props) {
-    const prefixCls = 'bfr-table-title';
-
-    const getTitle = computed(() => {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      const { title, getSelectRows = () => {} } = props;
-      let tit = title;
-
-      if (isFunction(title)) {
-        tit = title({
-          selectRows: getSelectRows(),
-        });
-      }
-      return tit;
-    });
-
-    return { getTitle, prefixCls };
   },
 });
 </script>
