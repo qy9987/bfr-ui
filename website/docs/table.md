@@ -345,7 +345,7 @@
 :::demo
 ```html
 <template>
-  <bfr-table @change="handleChange" @row-click="rowClick" @row-dbClick="rowDbClick" @row-contextmenu="rowContextmenu" 
+  <bfr-table ref="table" @change="handleChange" @row-click="rowClick" @row-dbClick="rowDbClick" @row-contextmenu="rowContextmenu" 
   showTableSetting
   @row-mouseenter="rowMouseenter" @row-mouseleave="rowMouseleave" :pagination="false" :data-source="dataSource" :columns="columns">
   <template #toolbar>
@@ -403,6 +403,7 @@
       },
       rowClick(record, index, event) {
         console.log( 'row-click',record, index, event);
+        this.$refs.table.setLoading(true);
       },
       rowDbClick(record, index, event) {
         console.log('row-dbclick', record, index, event);
@@ -421,6 +422,217 @@
 </script>
 ```
 :::
+
+### rowSelection
+
+表格事件操作
+
+:::demo
+```html
+<template>
+  <a-button @click="setKeys">选中行</a-button>
+  <bfr-table ref="table" rowKey="date" :rowSelection="{type: 'checkbox', columnWidth: 40}" @selection-change="selectionChange" :data-source="dataSource" :columns="columns" />
+</template>
+<script>
+  export default {
+    data() {
+      return {
+        columns: [{
+        title: '日期',
+        dataIndex: 'date',
+        width: 200,
+        },{
+        title: '姓名',
+        dataIndex: 'name',
+        width: 200,
+        sorter: (a, b)=>a-b
+        },{
+        title: '地址',
+        dataIndex: 'address',
+        width: 200,
+        }],
+        dataSource: [{
+            date: '2021-01-01',
+            name: '布法罗',
+            address: '成都市天府新区海昌路2039号'
+          },{
+            date: '2021-01-02',
+            name: '布法罗',
+            address: '成都市天府新区海昌路2039号'
+          },{
+            date: '2021-01-03',
+            name: '布法罗',
+            address: '成都市天府新区海昌路2039号'
+          }]
+      }
+    },
+    methods: {
+      selectionChange({keys, rows}) {
+        console.log(keys, rows);
+      },
+      setKeys() {
+        this.$refs.table.setSelectedRowKeys(['2021-01-03'])
+        this.getSelectedRow();
+      },
+      getSelectedRow() {
+        console.log(this.$refs.table.getSelectRows());
+      }
+    }
+  }
+</script>
+```
+:::
+
+### useTable
+
+hook操作
+```html
+<template>
+  <div >
+    <div>
+      <a-button  @click="reloadTable">还原</a-button>
+      <a-button  @click="changeLoading">开启loading</a-button>
+      <a-button  @click="changeColumns">更改Columns</a-button>
+      <a-button  @click="getColumn">获取Columns</a-button>
+      <a-button  @click="getTableData">获取表格数据</a-button>
+      <a-button  @click="setPaginationInfo">跳转到第2页</a-button>
+    </div>
+    <div>
+      <a-button  @click="getSelectRowList">获取选中行</a-button>
+      <a-button  @click="getSelectRowKeyList">获取选中行Key</a-button>
+      <a-button  @click="setSelectedRowKeyList">设置选中行</a-button>
+      <a-button  @click="clearSelect">清空选中行</a-button>
+      <a-button  @click="getPagination">获取分页信息</a-button>
+    </div>
+    <bfr-table @register="registerTable" />
+  </div>
+</template>
+<script>
+import {useTable} from 'bfr-ui/table'
+  export default {
+   setup() {
+     async function fetchData({page, pageSize}){
+        return await new Promise((reslove)=>{
+          setTimeout(()=>{
+            reslove(page*pageSize<=12?{dataList: [...Array(pageSize).fill(0)].map((i,index)=>({
+            date: '2021-01-01',
+            name: {
+              value: '布法罗'+index
+            },
+            address: '成都市天府新区海昌路2039号'
+          })), total: 12}:{dataList:[], total:12})
+          },500)
+        })
+      }
+     const [
+        registerTable,
+        {
+          setLoading,
+          setColumns,
+          getColumns,
+          getDataSource,
+          reload,
+          getPaginationRef,
+          setPagination,
+          getSelectRows,
+          getSelectRowKeys,
+          setSelectedRowKeys,
+          clearSelectedRowKeys,
+        },
+      ] = useTable({
+        title: 'useTable示例',
+        titleHelpMessage: '使用useTable调用表格内方法',
+        api: fetchData,
+        columns:[{
+        title: '日期',
+        dataIndex: 'date',
+        width: 200,
+        },{
+        title: '姓名',
+        dataIndex: 'name',
+        width: 200,
+        sorter: (a, b)=>a-b
+        },{
+        title: '地址',
+        dataIndex: 'address',
+        width: 200,
+        }],
+        rowKey: 'id',
+        showTableSetting: true,
+        rowSelection: {
+          type: 'checkbox',
+        },
+      });
+      function changeLoading() {
+        setLoading(true);
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      }
+      function changeColumns() {
+        setColumns(getBasicShortColumns());
+      }
+      function reloadTable() {
+        setColumns(getBasicColumns());
+
+        reload({
+          page: 1,
+        });
+      }
+      function getColumn() {
+        createMessage.info('请在控制台查看！');
+        console.log(getColumns());
+      }
+
+      function getTableData() {
+        createMessage.info('请在控制台查看！');
+        console.log(getDataSource());
+      }
+
+      function getPagination() {
+        createMessage.info('请在控制台查看！');
+        console.log(getPaginationRef());
+      }
+
+      function setPaginationInfo() {
+        setPagination({
+          current: 2,
+        });
+        reload();
+      }
+      function getSelectRowList() {
+        createMessage.info('请在控制台查看！');
+        console.log(getSelectRows());
+      }
+      function getSelectRowKeyList() {
+        createMessage.info('请在控制台查看！');
+        console.log(getSelectRowKeys());
+      }
+      function setSelectedRowKeyList() {
+        setSelectedRowKeys(['0', '1', '2']);
+      }
+      function clearSelect() {
+        clearSelectedRowKeys();
+      }
+
+      return {
+        registerTable,
+        changeLoading,
+        changeColumns,
+        reloadTable,
+        getColumn,
+        getTableData,
+        getPagination,
+        setPaginationInfo,
+        getSelectRowList,
+        getSelectRowKeyList,
+        setSelectedRowKeyList,
+        clearSelect,
+      };
+   }
+  }
+</script>
+```
 
 ### api
 
@@ -445,10 +657,11 @@
 | showTableSetting     | 显示表格功能栏          | boolean | — | — | — |
 | tableSetting     | 表格功能栏设置          | [tablesetting](#tablesetting) | — | — | — |
 | ellipsis     | 文本超过长度是否显示省略号，配置为true时表格列数据不予许换行           | boolean | — | true | — |
-| clearSelectOnPageChange     | 切换页码是否重置勾选状态          | boolean | — | — |  TODO 测试 |
-| titleHelpMessage     | 表格标题右侧提示          | string \| string[] | — | — | TODO 测试 |
+| clearSelectOnPageChange     | 切换页码是否重置勾选状态          | boolean | — | — | — |
+| title     | 表格标题       |  string \| #tableTitle  | — | — | — |
+| titleHelpMessage     | 表格标题右侧提示          | string \| string[] | — | — | — | 
 | maxHeight     | 表格最大高度，超过展示滚动条，maxHeight存在时，scroll.y属性无效, maxHeight值为string类型时，必须带有单位，不带有单位会出现滚动条，但无法滚动         | string\|number | — | — | — |
-| pagination     | 分页配置          | [PaginationProps](#paginationprops) \| boolean | — | — | TODO测试 |
+| pagination     | 分页配置          | [PaginationProps](#paginationprops) \| boolean | — | — | — |
 | loading     | 开启loading          | boolean | — | — | — |
 | childrenColumnName     | 指定树形结构的列名          | string \| string[] | — | — | — |
 | defaultExpandAllRows     | 初始时，是否展开所有行          | boolean | — | — | — |
@@ -464,7 +677,6 @@
 | rowSelection     | 列表项是否可选择       | [RowSelection](#rowselection) | — | null | TODO |
 | scroll     | 设置横向或纵向滚动，也可用于指定滚动区域的宽和高，建议为 x 设置一个数字，如果要设置为 true，需要配合样式 .ant-table td { white-space: nowrap; }       | { x: string \| number \| true; y: string \| number } | — | — | — |
 | size     | 表格大小       | default \| middle \| small  | — | middle | — |
-| title     | 表格标题       |  string \| #tableTitle  | — | — | — |
 | customHeaderRow     | 设置头部行属性       | (column: [ColumnProps](#basiccolumn), index: number) => object  | — | — | — |
 | customRow     | 设置行属性 ,[用法](https://2x.antdv.com/components/table-cn/#customRow-%E7%94%A8%E6%B3%95)      | (record: object, index: number) => object  | — | — | — |
 | getPopupContainer     | 设置表格内各类浮层的渲染节点，如筛选菜单       |  (triggerNode?: HTMLElement) => HTMLElement  | — | () => TableHtmlElement | — |
@@ -504,18 +716,17 @@
 |---------- |-------------- |-------------- |
 | setProps | (props: BasicTableProps) => void |     用于设置表格参数    |
 | reload | (opt?: FetchParams) => Promise< void > |     刷新表格    |
-| redoHeight | () => void |     重新计算表格高度 TODO    |
 | setLoading | (loading:boolean) => void |     设置表格loading    |
 | getDataSource | () => any[] |     获取表格数据    |
-| getColumns | (opt?: [GetColumnsParams](#getcolumnsparams)) => BasicColumn[] |     获取表格数据    |
 | setTableData | (values: any[]) => void |     设置表格数据    |
+| getColumns | (opt?: [GetColumnsParams](#getcolumnsparams)) => BasicColumn[] |     获取表格数据    |
 | setPagination | (info: PaginationProps) => void |     设置分页信息    |
-| deleteSelectRowByKey | (key: string) => void |     根据 key 删除取消选中行    |
+| getPagination | () => PaginationProps \| boolean |     获取当前分页信息    |
 | getSelectRowKeys | () => string[] |     获取选中行的 keys    |
 | getSelectRows | () => any[] |     获取选中行的 rows    |
-| clearSelectedRowKeys | () => void |     清空选中行    |
 | setSelectedRowKeys | (rowKeys: string[] \| number[]) => void |     设置选中行    |
-| getPagination | () => PaginationProps \| boolean |     获取当前分页信息    |
+| clearSelectedRowKeys | () => void |     清空选中行    |
+| deleteSelectRowByKey | (key: string) => void |     根据 key 删除取消选中行    |
 
 
 #### TableSetting
@@ -566,7 +777,7 @@
 | selectedRowKeys | 指定选中项的 key 数组，需要和 onChange 进行配合 | string[] | — | [] | — |
 | selections | 自定义选择配置项, 设为 true 时使用默认选择项 | object[]\|boolean | — | true | — |
 | type | 多选/单选，checkbox or radio | string | — | checkbox | — |
-| onChange | 选中项发生变化时的回调 | Function(selectedRowKeys, selectedRows) | — | — | — |
+| onChange | 选中项发生变化时的回调 | Function(selectedRowKeys, selectedRows) | — | — | Delete |
 | onSelect | 用户手动选择/取消选择某列的回调 | Function(record, selected, selectedRows, nativeEvent) | — | — | — |
 | onSelectAll | 用户手动选择/取消选择所有列的回调 | Function(selected, selectedRows, changeRows) | — | — | — |
 | onSelectInvert | 用户手动选择反选的回调 | Function(selectedRows) | — | — | — |

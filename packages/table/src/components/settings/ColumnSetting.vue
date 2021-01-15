@@ -149,9 +149,9 @@ export default defineComponent({
 
     const prefixCls = 'bfr-column-setting';
 
-    const getValues = computed(() => {
-      return unref(table?.getBindValues) || {};
-    });
+    // const getValues = computed(() => {
+    //   return unref(table?.getBindValues) || {};
+    // });
 
     watchEffect(() => {
       const columns = table.getColumns();

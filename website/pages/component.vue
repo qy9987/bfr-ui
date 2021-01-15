@@ -158,7 +158,7 @@ export default {
         margin: 55px 0 20px;
       }
 
-      table {
+      h4~table {
         border-collapse: collapse;
         width: 100%;
         background-color: #fff;
@@ -177,7 +177,6 @@ export default {
         }
 
         th {
-          text-align: left;
           white-space: nowrap;
           color: #909399;
           font-weight: normal;

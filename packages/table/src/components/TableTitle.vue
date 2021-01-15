@@ -1,23 +1,32 @@
 <template>
-  <span v-if="title" class="bfr-table-title show-span">
+  <span v-if="title" class="bfr-table-title">
     {{ title }}
-    <BasicHelp v-if="helpMessage" class="bfr-table-title__help" :text="helpMessage" />
+    <Tooltip
+      v-if="helpMessage"
+      class="bfr-table-title__help"
+      placement="right"
+      :title="helpMessage"
+    >
+      <InfoCircleOutlined />
+    </Tooltip>
   </span>
 </template>
 <script lang="ts">
-import {  defineComponent, PropType } from 'vue';
-import { BasicHelp } from '@bfr-ui/basic';
+import {  defineComponent } from 'vue';
+import { Tooltip } from 'ant-design-vue';
+import { InfoCircleOutlined } from '@ant-design/icons-vue';
 export default defineComponent({
   name: 'BasicTableTitle',
   components: {
-    BasicHelp,
+    Tooltip,
+    InfoCircleOutlined,
   },
   props: {
     title: {
       type: String,
     },
     helpMessage: {
-      type: [String, Array] as PropType<string | string[]>,
+      type: String,
     },
   },
 });

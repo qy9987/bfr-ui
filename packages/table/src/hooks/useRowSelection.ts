@@ -3,20 +3,22 @@ import type { BasicTableProps, TableRowSelection } from '../types/table';
 import { computed, ref, unref, ComputedRef } from 'vue';
 
 
-export function useRowSelection(propsRef: ComputedRef<BasicTableProps>, emit: EmitType) {
+export function useRowSelection(propsRef: ComputedRef<BasicTableProps> , emit: EmitType) {
   const selectedRowKeysRef = ref<string[]>([]);
   const selectedRowRef = ref<Recordable[]>([]);
 
   const getRowSelectionRef = computed((): TableRowSelection | null => {
+    const selectedRowKeys = unref(selectedRowKeysRef);
     const { rowSelection } = unref(propsRef);
     if (!rowSelection) {
       return null;
     }
     return {
-      selectedRowKeys: unref(selectedRowKeysRef),
+      selectedRowKeys,
       hideDefaultSelections: false,
-      // TODO onChange方法有待商讨，确定不会被覆盖？
+      ...rowSelection,
       onChange: (selectedRowKeys: string[], selectedRows: any[]) => {
+        rowSelection.onChange && rowSelection.onChange(selectedRowKeys, selectedRows);
         selectedRowKeysRef.value = selectedRowKeys;
         selectedRowRef.value = selectedRows;
         emit('selection-change', {
@@ -24,12 +26,13 @@ export function useRowSelection(propsRef: ComputedRef<BasicTableProps>, emit: Em
           rows: selectedRows,
         });
       },
-      ...rowSelection,
     };
   });
-
   function setSelectedRowKeys(rowKeys: string[]) {
     selectedRowKeysRef.value = rowKeys;
+    const { rowKey, dataSource } = unref(propsRef);
+    const getRowKey = record => typeof rowKey === 'function' ? rowKey(record) : rowKey;
+    selectedRowRef.value = dataSource.filter(i=>rowKeys.includes(i[getRowKey(i)]));
   }
 
   function clearSelectedRowKeys() {
@@ -50,13 +53,11 @@ export function useRowSelection(propsRef: ComputedRef<BasicTableProps>, emit: Em
   }
 
   function getSelectRows<T = Recordable>() {
-    // const ret = toRaw(unref(selectedRowRef)).map((item) => toRaw(item));
     return unref(selectedRowRef) as T[];
   }
 
   function getRowSelection() {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return unref(getRowSelectionRef)!;
+    return unref(getRowSelectionRef);
   }
 
   return {

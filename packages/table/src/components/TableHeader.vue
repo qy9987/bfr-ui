@@ -26,7 +26,7 @@ export default defineComponent({
   },
   props: {
     title: {
-      type: [Function, String] as PropType<string | ((data: Recordable) => string)>,
+      type: String,
     },
     tableSetting: {
       type: Object as PropType<TableSetting>,
@@ -35,7 +35,7 @@ export default defineComponent({
       type: Boolean,
     },
     titleHelpMessage: {
-      type: [String, Array] as PropType<string | string[]>,
+      type: String,
       default: '',
     },
   },

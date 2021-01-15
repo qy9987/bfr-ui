@@ -12,7 +12,7 @@
     "bootstrap": "yarn --frozen-lockfile && npx lerna bootstrap",
     "link": "cd packages && cd bfr-ui && yarn link",
     "build": "yarn bootstrap && yarn clean:lib && yarn build:esm-bundle && yarn build:lib && yarn build:lib-full && yarn build:esm && yarn build:theme",
-    "clean:lib": "rimraf lib && rimraf es",
+    "clean:lib": "rimraf lib",
     "build:lib": "cross-env LIBMODE=core webpack --config ./build/webpack.config.js",
     "build:lib-full": "cross-env LIBMODE=full webpack --config ./build/webpack.config.js",
     "build:esm-bundle": "rollup --config build/rollup.config.esm.bundle.js && yarn build:type",
@@ -58,7 +58,6 @@
     "gulp-rename": "^2.0.0",
     "highlight.js": "^10.1.2",
     "html-webpack-plugin": "^4.3.0",
-    "jest": "^26.4.2",
     "lerna": "^3.22.1",
     "less": "3.13.0",
     "less-loader": "^7.2.1",
@@ -92,12 +91,13 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
-    "ant-design-vue": "^2.0.0-rc.6",
+    "ant-design-vue": "2.0.0-rc.8",
     "dayjs": "1.x",
+    "jest": "^26.6.3",
     "lodash": "^4.17.20",
     "mitt": "^2.1.0",
     "sortablejs": "^1.10.2",
-    "vue": "3.0.4"
+    "vue": "3.0.5"
   },
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",

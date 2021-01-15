@@ -24,6 +24,9 @@
     "children":[{
       "path":"/table",
       "name":"表格 table"
+    },{
+      "path":"/descriptions",
+      "name":"描述列表 descriptions"
     }]
   }
 ]

@@ -70,7 +70,8 @@ export const basicProps = {
     default: null,
   },
   titleHelpMessage: {
-    type: [String, Array] as PropType<string | string[]>,
+    type: String,
+    default: null,
   },
   maxHeight: [String, Number] as PropType<string | number>,
   dataSource: {

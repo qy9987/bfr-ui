@@ -21,13 +21,13 @@ export const FETCH_SETTING = {
   totalField: 'total',
 };
 
-export function setGolbalFetchSetting(fetchSetting: FetchSetting = {}) {
+export const setGolbalFetchSetting =  (fetchSetting: FetchSetting = {}) => {
   const setting = { ...FETCH_SETTING, ...fetchSetting };
   FETCH_SETTING.pageField = setting.pageField;
   FETCH_SETTING.sizeField = setting.sizeField;
   FETCH_SETTING.listField = setting.listField;
   FETCH_SETTING.totalField = setting.totalField;
-}
+};
 
 
 //  表格单元格默认布局

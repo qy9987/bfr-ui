@@ -13,7 +13,6 @@
       ref="tableElRef"
       v-bind="getBindValues"
       :row-class-name="getRowClassName"
-      @change="handleTableChange"
     >
       <template v-for="item in Object.keys($slots)" #[item]="data">
         <slot v-if="item!=='footer'" :name="item" v-bind="data" />
@@ -25,7 +24,7 @@
 import type { BasicTableProps, TableActionType, SizeType, SorterResult } from './types/table';
 import { PaginationProps } from './types/pagination';
 
-import { defineComponent, ref, computed, unref, getCurrentInstance, watch } from 'vue';
+import { defineComponent, ref, computed, unref, getCurrentInstance } from 'vue';
 import { Table } from 'ant-design-vue';
 
 import { omit } from 'lodash';
@@ -49,10 +48,11 @@ export default defineComponent({
   components: { Table /*BasicForm*/ },
   props: basicProps,
   emits: [
+    'change',
     'fetch-success',
     'fetch-error',
     'selection-change',
-    // 'register',
+    'register',
     'row-click',
     'row-dbClick',
     'row-contextmenu',
@@ -67,8 +67,6 @@ export default defineComponent({
     const wrapRef = ref<Nullable<HTMLDivElement>>(null);
     // 获取初始props
     const innerPropsRef = ref<Partial<BasicTableProps>>();
-
-    // const [registerForm, formActions] = useForm();
     // 真实props
     const realProps = computed(() => {
       return { ...props, ...unref(innerPropsRef) } as BasicTableProps;
@@ -141,6 +139,7 @@ export default defineComponent({
       tableElRef,
       getDataSourceRef,
     );
+
     // ant 表格绑定 attrs
     const getBindValues = computed(() => {
       let propsData: Recordable = {
@@ -158,6 +157,14 @@ export default defineComponent({
         pagination: unref(paginationInfo),
         dataSource: unref(getDataSourceRef),
         footer: unref(getFooterProps),
+        onChange: (
+          pagination: PaginationProps,
+          filterInfo: Partial<Recordable<string[]>>,
+          sortInfo: SorterResult,
+        )=>{
+          emit('change', pagination, filterInfo, sortInfo);
+          handleTableChange(pagination, filterInfo, sortInfo);
+        },
       };
       if (slots.expandedRowRender) {
         propsData = omit(propsData, 'scroll');
@@ -218,7 +225,7 @@ export default defineComponent({
       Object.assign(instance.proxy, tableAction);
     }
 
-    // emit('register', tableAction);
+    emit('register', tableAction);
 
     return {
       paginationInfo,

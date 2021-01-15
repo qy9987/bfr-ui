@@ -1,8 +1,11 @@
 import { buildUUID } from '@bfr-ui/utils/uuid';
 import { mount as _mount } from '@vue/test-utils';
+import { Checkbox, Pagination } from 'ant-design-vue';
 import { nextTick } from 'vue';
 import {  TableActionType } from '../../../lib/bfr-table';
-import Table from  '../src/index.vue';
+import Table from '../src/index.vue';
+import { setGolbalFetchSetting } from  '../index';
+
 const getTestData = function() {
   return [
     {
@@ -118,8 +121,9 @@ describe('Table', () => {
         };
       },
     });
-    it('showSummary false', () => {
+    it('showSummary false', done => {
       expect(wrapper.find('.ant-table-footer').exists()).toBe(false);
+      done();
     });
     it('showSummary true',async done => {
       wrapper.setData({ showSummary: true });
@@ -223,29 +227,32 @@ describe('Table', () => {
       },
       template: `
       <Table
-        title="远程加载数据"
+        ref="apiRef"
         :beforeFetch="beforeFetch"
         :afterFetch="afterFetch"
         showTableSetting
         :tableSetting="{allowFixed: true}"
         :api="fetchData"
+        :fetchSetting="fetchSetting"
         :columns="[]"
       />`,
       data() {
         return {
           result: true,
-          // fetchSetting: {
-          //   listField: 'items',
-          // },
-          columns: [
-            {
-              dataIndex: 'id',
-              title: 'ID',
-            },
-            {
-              dataIndex: 'name',
-              title: 'name',
-            }],
+          fetchSetting: {
+            listField: 'items',
+            totalField: 'totals',
+          },
+          columns: [{
+            title: '姓名',
+            dataIndex: 'name.value',
+            width: 200,
+            sorter: true,
+          },{
+            title: '地址',
+            dataIndex: 'address',
+            width: 200,
+          }],
         };
       },
       methods: {
@@ -255,22 +262,25 @@ describe('Table', () => {
         afterFetch(items) {
           console.log('after fetch',items);
         },
-        fetchData() {
-          const items = getTestData();
-          return new Promise((resolve, reject) => {
-            // this.result?:reject('error');
-            resolve({ [`${this.fetchSetting.listField}`]:items , total: items.length });
+        async fetchData() {
+          return await new Promise(reslove => {
+            setTimeout(() => {
+              reslove(this.result ? {
+                [`${this.fetchSetting.listField}`]: getTestData(), total: 12,
+              } : { [`${this.fetchSetting.listField}`]: [], total: 12 });
+            }, 100);
           });
         },
       },
     });
     it('api true', async done => {
+      await nextTick();
       setTimeout(() => {
         expect(
           wrapper.findAll('.ant-table-tbody tr').length,
         ).toEqual(getTestData().length);
-        done();
-      }, 200);
+      }, 300);
+      done();
     });
     it('api false', async done => {
       wrapper.setData({ result: false });
@@ -280,20 +290,30 @@ describe('Table', () => {
         expect(
           wrapper.findAll('.ant-table-tbody tr').length,
         ).toEqual(0);
-        done();
-      },200);
+      }, 300);
+      done();
     });
     it('api fetchSetting', async done => {
       wrapper.setData({ result: true, fetchSetting: { listField: 'datalist' } });
-      await nextTick();
       (wrapper.vm.$refs.apiRef as TableActionType).reload();
       await nextTick();
       setTimeout(() => {
         expect(
           wrapper.findAll('.ant-table-tbody tr').length,
         ).toEqual(getTestData().length);
-        done();
-      },200);
+      }, 300);
+      done();
+    });
+    it('api setGolbalFetchSetting', async done => {
+      setGolbalFetchSetting({ totalField: 'total' });
+      await nextTick();
+      setTimeout(() => {
+        const pag = (wrapper.vm.$refs.apiRef as TableActionType).getPagination();
+        if (typeof pag !== 'boolean') {
+          expect(pag.total).toBe(12);
+        }
+      }, 300);
+      done();
     });
   });
   describe('showTableInEmpty', () => {
@@ -470,6 +490,192 @@ describe('Table', () => {
       expect(tbody.exists()).toBe(true);
       const [, td] = tbody.findAll('td');
       expect(td.classes()).not.toContain('ant-table-row-cell-ellipsis');
+      done();
+    });
+  });
+  describe('clearSelectOnPageChange', () => {
+    const wrapper = _mount({
+      components: { Table },
+      template: `
+      <Table 
+        ref="table"
+        :clearSelectOnPageChange="clearSelectOnPageChange" 
+        :rowSelection="{ type: 'checkbox' }"
+        rowKey="id"
+        :pagination="{pageSize: 2}"
+        :dataSource="data"
+        :columns="columns"
+       />`,
+      data() {
+        return {
+          data: getTestData(),
+          clearSelectOnPageChange: false,
+          columns: [
+            {
+              dataIndex: 'id',
+              title: 'ID',
+            },
+            {
+              dataIndex: 'name',
+              title: 'name',
+              width: 20,
+            }],
+        };
+      },
+    });
+    it('clearSelectOnPageChange true', async done => {
+      wrapper.setData({ clearSelectOnPageChange: true });
+      await nextTick();
+      const box = wrapper.findAllComponents(Checkbox);
+      box[0].trigger('click');
+      await nextTick();
+      const rows = (wrapper.vm.$refs.table as TableActionType).getSelectRows();
+      expect(box.length).toBe(rows.length + 1);
+      const pagination = wrapper.findComponent(Pagination);
+      ((pagination.vm.$el as HTMLElement).querySelector('[title="2"]') as HTMLElement).click();
+      await nextTick();
+      expect((wrapper.vm.$refs.table as TableActionType).getSelectRows().length).toBe(0);
+      done();
+    });
+
+    it('clearSelectOnPageChange false', async done => {
+      wrapper.setData({ clearSelectOnPageChange: false });
+      await nextTick();
+      const box = wrapper.findAllComponents(Checkbox);
+      box[0].trigger('click');
+      await nextTick();
+      const rows = (wrapper.vm.$refs.table as TableActionType).getSelectRows();
+      expect(box.length).toBe(rows.length + 1);
+      const pagination = wrapper.findComponent(Pagination);
+      ((pagination.vm.$el as HTMLElement).querySelector('[title="2"]') as HTMLElement).click();
+      await nextTick();
+      expect((wrapper.vm.$refs.table as TableActionType).getSelectRows().length).toBe(2);
+      done();
+    });
+  });
+  describe('title', () => {
+    const wrapper = _mount({
+      components: { Table },
+      template: `
+      <Table 
+        title="title"
+        titleHelpMessage="titleHelpMessage"
+        ref="table"
+        :dataSource="data"
+        :columns="columns"
+       />`,
+      data() {
+        return {
+          data: getTestData(),
+          columns: [
+            {
+              dataIndex: 'id',
+              title: 'ID',
+            },
+            {
+              dataIndex: 'name',
+              title: 'name',
+              width: 20,
+            }],
+        };
+      },
+    });
+    it('title', done => {
+      const title = wrapper.find('.bfr-table-title');
+      expect(title.text()).toBe('title');
+      done();
+    });
+
+    it('titleHelpMessage', async done => {
+      expect(wrapper.find('.bfr-table-title__help').exists()).toBe(true);
+      done();
+    });
+  });
+  // methods
+  describe('methods', () => {
+    const createTable = () => _mount({
+      components: { Table },
+      template: `<Table
+      rowKey="id"
+      :rowSelection="{type: 'checkbox'}"
+      ref="table"
+      :dataSource="data"
+      :columns="columns"
+     />`,
+      data() {
+        return {
+          data: getTestData(),
+          columns: [{
+            dataIndex: 'id',
+            title: 'ID',
+          },
+          {
+            dataIndex: 'name',
+            title: 'name',
+            width: 20,
+          }],
+        };
+      },
+      methods: {
+        getRef() {
+          return this.$refs.table;
+        },
+      },
+    });
+
+    const wrapper = createTable();
+    it('setProps', async done => {
+      wrapper.vm.getRef().setProps({ title: 'title' , loading: true });
+      await nextTick();
+      const title = wrapper.find('.bfr-table-title');
+      expect(title.text()).toBe('title');
+      done();
+    });
+    it('setLoading', async done => {
+      wrapper.vm.getRef().setLoading(true);
+      await nextTick();
+      expect(wrapper.vm.getRef().getBindValues.loading).toBe(true);
+      wrapper.vm.getRef().setLoading(false);
+      await nextTick();
+      expect(wrapper.vm.getRef().getBindValues.loading).toBe(false);
+      done();
+    });
+    it('getDataSource', async done => {
+      expect(wrapper.vm.getRef().getDataSource().length).toBe(getTestData().length);
+      done();
+    });
+    it('getColumns', async done => {
+      expect( wrapper.vm.getRef().getColumns().length).toBe(2);
+      done();
+    });
+    it('setTableData', async done => {
+      const data = [...getTestData(), ...getTestData()];
+      wrapper.vm.getRef().setTableData(data);
+      expect(wrapper.vm.getRef().getDataSource().length).toBe(data.length);
+      done();
+    });
+    it('pagination', async done => {
+      wrapper.vm.getRef().setPagination({ current: 2 });
+      await nextTick();
+      const pagination = wrapper.findComponent(Pagination);
+      expect((pagination.vm.$el as HTMLElement).querySelector('.ant-pagination-item-active[title="2"]')).toBeTruthy;
+      expect(wrapper.vm.getRef().getPagination()).toHaveProperty('current', 2);
+      done();
+    });
+    it('selectRow', async done => {
+      const keys = getTestData().map(i => i.id);
+      const table = wrapper.vm.getRef();
+      table.setSelectedRowKeys(keys);
+      await nextTick();
+      expect(table.getSelectRowKeys()).toEqual(keys);
+      expect(table.getRowSelection().selectedRowKeys.length).toEqual(keys.length);
+      const [key1, key2] = keys;
+      table.deleteSelectRowByKey(key1);
+      table.deleteSelectRowByKey(key2);
+      expect(table.getSelectRowKeys()).not.toContainEqual(key1);
+      expect(table.getSelectRowKeys()).not.toContainEqual(key2);
+      table.clearSelectedRowKeys();
+      expect(table.getSelectRowKeys().length).toEqual(0);
       done();
     });
   });

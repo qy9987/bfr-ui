@@ -35,7 +35,17 @@ export function isDate(val: unknown): val is Date {
 export function isNull(val: unknown): val is null {
   return val === null;
 }
-
+export function isUndefined(val: unknown): val is null {
+  return val === undefined;
+}
 export function isNullAndUnDef(val: unknown): val is null | undefined {
   return isUnDef(val) && isNull(val);
+}
+/**
+ * 验证数据是否为null或者undefined
+ * @param {any} val 需要验证的数据
+ * @returns {boolean} 验证结果，为空为true 不为空为false
+ */
+export function isBaseEmpty(val: any): boolean {
+  return isNull(val)||isUndefined(val);
 }

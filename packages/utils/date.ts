@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import RelativeTime from 'dayjs/plugin/relativeTime';
 import cn from 'dayjs/locale/zh-cn';
-import { isEmpty } from 'lodash';
+import { isBaseEmpty } from './is';
 dayjs.locale(cn);
 dayjs.extend(RelativeTime);
 /**
@@ -10,7 +10,7 @@ dayjs.extend(RelativeTime);
  * @param {String} 格式类型，默认为YYYY-M-D HH:mm:ss
  */
 export function formatter(datestr: dayjs.ConfigType, type = 'YYYY-MM-DD HH:mm:ss'): string {
-  return  isEmpty(datestr) ? '' : dayjs(datestr).format(type);
+  return  isBaseEmpty(datestr) ? '' : dayjs(datestr).format(type);
 }
 export function now(type = 'YYYY-MM-DD HH:mm:ss'): string {
   return dayjs().format(type);

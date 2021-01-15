@@ -63,6 +63,7 @@ function genInlineComponentText(template, script) {
   // todo: 这里采用了硬编码有待改进
   script = script.trim();
   if (script) {
+
     script = script
       .replace(/export\s+default/, 'const democomponentExport =')
       .replace(/import ({.*}) from 'vue'/g, (s, s1) => `const ${s1} = Vue`);

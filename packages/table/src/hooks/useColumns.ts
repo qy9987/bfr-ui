@@ -4,6 +4,7 @@ import {  isArray, isString } from '@bfr-ui/utils/is';
 import { DEFAULT_ALIGN,  INDEX_COLUMN_FLAG, ACTION_COLUMN_FLAG } from '../const';
 import {  cloneDeep } from 'lodash';
 import { formatter } from '@bfr-ui/utils/date';
+import { getPercent } from '@bfr-ui/utils';
 
 function handleItem(item: BasicColumn, ellipsis: boolean) {
   const { key, dataIndex, children } = item;
@@ -101,9 +102,7 @@ export function useColumns(
           } else if (percent instanceof Function) {
             realPercent = percent();
           }
-          item.customRender = ({ text }) => {
-            return (text*100/realPercent) +'%';
-          };
+          item.customRender = ({ text }) => getPercent(text, realPercent);
         }
       }
       handleItem(

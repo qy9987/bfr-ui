@@ -1,13 +1,10 @@
 {
-  "name": "@bfr-ui/basic",
+  "name": "@bfr-ui/descriptions",
   "version": "0.0.0",
-  "main": "dist/index.js",
   "license": "MIT",
   "peerDependencies": {
+    "ant-design-vue": "^2.0.0-rc.6",
     "vue": "^3.0.4"
-  },
-  "dependencies": {
-    "dayjs": "1.x"
   },
   "devDependencies": {
     "@vue/test-utils": "^2.0.0-beta.14"
