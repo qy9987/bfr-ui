@@ -25,6 +25,9 @@
       "path":"/table",
       "name":"表格 table"
     },{
+      "path":"/form",
+      "name":"表单 form"
+    },{
       "path":"/descriptions",
       "name":"描述列表 descriptions"
     }]

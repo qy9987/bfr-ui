@@ -6,7 +6,6 @@ export type VueNode = VNodeChild | JSX.Element;
 type PropTypes = VueTypesInterface & {
   readonly style: VueTypeValidableDef<CSSProperties>;
   readonly VNodeChild: VueTypeValidableDef<VueNode>;
-  // readonly trueBool: VueTypeValidableDef<boolean>;
 };
 
 const propTypes = createTypes({
@@ -14,9 +13,12 @@ const propTypes = createTypes({
   bool: undefined,
   string: undefined,
   number: undefined,
-  object: undefined,
   integer: undefined,
-}) as PropTypes;
+});
+
+function customPropType<T>(types) {
+  return types as VueTypeValidableDef<T> & {default: T};
+}
 
 propTypes.extend([
   {
@@ -31,4 +33,4 @@ propTypes.extend([
     type: undefined,
   },
 ]);
-export { propTypes };
+export { propTypes, customPropType };
